@@ -1,0 +1,19 @@
+<?xml version = '1.0' encoding = 'UTF-8'?>
+<OSDM_Design class="oracle.dbtools.crest.model.design.Design" name="(Hammad, Ayesh, Shubair)" id="BF4CB02B-4DD4-A928-3679-0B01E806AE44" version="3.5">
+<createdBy>Lenovo</createdBy>
+<createdTime>2025-10-21 02:59:54 UTC</createdTime>
+<ownerDesignName>23i-0544</ownerDesignName>
+<capitalNames>false</capitalNames>
+<designId>BF4CB02B-4DD4-A928-3679-0B01E806AE44</designId>
+<usedDesignStorageDescriptors>
+<designDescr class="oracle.dbtools.crest.model.design.Design$DesignStorageDesc" id="0B2B35B2-6CCA-F898-96C3-1372F5394583">
+<designStoragePath>D:\hammad</designStoragePath>
+</designDescr>
+<designDescr class="oracle.dbtools.crest.model.design.Design$DesignStorageDesc" id="68780997-5991-0CB0-6F0D-37EE7A6B76A5">
+<designStoragePath>D:\hammad</designStoragePath>
+</designDescr>
+<designDescr class="oracle.dbtools.crest.model.design.Design$DesignStorageDesc" id="E7DD335F-2E0D-8255-7057-1895DD465687">
+<designStoragePath>D:\hammad</designStoragePath>
+</designDescr>
+</usedDesignStorageDescriptors>
+</OSDM_Design>
