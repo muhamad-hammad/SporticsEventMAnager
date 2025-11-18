@@ -157,14 +157,14 @@ class Courts(models.Model):
 
 
 class Booking(models.Model):
-    STATUS_CHOICES = (
-        ("pending", "Pending"),
-        ("confirmed", "Confirmed"),
-        ("cancelled", "Cancelled"),
-    )
-
-    court = models.ForeignKey(Courts, on_delete=models.CASCADE, related_name="bookings")
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="bookings")
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+    
+    court = models.ForeignKey(Courts, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     date = models.DateField()
     start_time = models.TimeField()
     end_time = models.TimeField()
@@ -179,4 +179,4 @@ class Booking(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.user} | {self.court} | {self.date} {self.start_time}-{self.end_time}"
+        return f"{self.user.username} | {self.court.court_name} | {self.date} {self.start_time}-{self.end_time} [{self.status}]"

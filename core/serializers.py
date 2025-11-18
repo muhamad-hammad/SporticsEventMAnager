@@ -13,7 +13,7 @@ from datetime import datetime
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "username", "email", "role", "department", "contact_no", "house"]
+        fields = ["id", "username", "email", "role", "department", "contact_no"]
 
 
 # -----------------------------
@@ -106,6 +106,9 @@ class CourtSerializer(serializers.ModelSerializer):
 
 
 class BookingSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    court_details = CourtSerializer(source='court', read_only=True)
+    
     class Meta:
         model = Booking
         fields = ("id", "court", "date", "start_time", "end_time", "total_cost", "status", "created_at")
