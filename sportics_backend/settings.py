@@ -47,7 +47,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
+    
+    'djoser',
+    'rest_framework_simplejwt',
     # Third party apps
     'rest_framework',
     'corsheaders',
@@ -55,6 +57,21 @@ INSTALLED_APPS = [
     # Local apps
     'core',
 ]
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+}
+
+SIMPLE_JWT = {
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
+DJOSER = {
+    "USER_CREATE_PASSWORD_RETYPE": True,
+    "SERIALIZERS": {},
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

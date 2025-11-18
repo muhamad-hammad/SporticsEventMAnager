@@ -1,12 +1,25 @@
 from django.shortcuts import render
-from rest_framework.response import Response
+from rest_framework import viewsets, status,permissions
 from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+
+from .models import (
+    Player, Sport, PlayerSportRegistration,
+    Team, House, Courts, Booking
+)
+from .serializers import (
+    PlayerSerializer, SportSerializer,
+    PlayerSportRegistrationSerializer, TeamSerializer,
+    HouseSerializer, CourtSerializer, BookingSerializer
+)
+
+
+
 
 
 # Create your views here.
-from rest_framework import viewsets
-from .models import Sport, House, Team
-from .serializers import SportSerializer, HouseSerializer, TeamSerializer
 
 class SportViewSet(viewsets.ModelViewSet):
     queryset = Sport.objects.all()
@@ -20,8 +33,6 @@ class TeamViewSet(viewsets.ModelViewSet):
     queryset = Team.objects.all()
     serializer_class = TeamSerializer
 
-from .models import Courts, CourtSlots, CourtBookings
-from .serializers import CourtSerializer, CourtSlotSerializer, CourtBookingSerializer
 
 
 @api_view(["GET"])
@@ -32,48 +43,48 @@ def get_courts(request):
 
 
 
-@api_view(["GET"])
-def get_available_slots(request):
-    court_id = request.GET.get("court_id")
-    date = request.GET.get("date")
+class RegisterPlayer(APIView):
+    permission_classes = [IsAuthenticated]
 
-    slots = CourtSlots.objects.filter(court_id=court_id, date=date, is_available=True)
-
-    serializer = CourtSlotSerializer(slots, many=True)
-    return Response(serializer.data)
-
-
-@api_view(["POST"])
-def book_slot(request):
-    user_id = request.data.get("user_id")
-    court_id = request.data.get("court_id")
-    slot_id = request.data.get("slot_id")
-
-    # 1. Ensure slot exists
-    try:
-        slot = CourtSlots.objects.get(slot_id=slot_id, court_id=court_id)
-    except CourtSlots.DoesNotExist:
-        return Response({"error": "Slot not found"}, status=400)
-
-    # 2. Check if slot already booked
-    if CourtBookings.objects.filter(court_id=court_id, slot_id=slot_id).exists():
-        return Response({"error": "Slot already booked"}, status=400)
-
-    # 3. Mark slot unavailable
-    slot.is_available = False
-    slot.save()
-
-    # 4. Create booking
-    booking = CourtBookings.objects.create(
-        user_id=user_id,
-        court_id=court_id,
-        slot_id=slot_id,
-        status="pending"
-    )
-
-    return Response({
-        "message": "Booking successful",
-        "booking_id": booking.booking_id
-    })
+    def post(self, request):
+        serializer = PlayerSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
 
 
+
+class RegisterSportView(APIView):
+    def post(self, request):
+        player = Player.objects.get(user=request.user)
+        sport_id = request.data.get("sport_id")
+
+        # Check sport exists
+        try:
+            sport = Sport.objects.get(id=sport_id)
+        except Sport.DoesNotExist:
+            return Response({"error": "Sport not found"}, status=404)
+
+        # Create registration
+        reg, created = PlayerSportRegistration.objects.get_or_create(
+            player=player, sport=sport
+        )
+
+        if not created:
+            return Response({"message": "Already registered"}, status=200)
+
+        return Response(PlayerSportRegistrationSerializer(reg).data, status=201)
+
+
+
+
+class CreateBooking(APIView):
+    permission_classes = [permissions.IsAuthenticated]  # JWT ensures user is logged in
+
+    def post(self, request):
+        serializer = BookingSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response({"message": "Booking confirmed!"}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
