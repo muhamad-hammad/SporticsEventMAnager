@@ -10,9 +10,6 @@ export default function RegisterPage() {
     email: '',
     password: '',
     re_password: '',
-    role: 'general',
-    department: '',
-    contact_no: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -42,7 +39,7 @@ export default function RegisterPage() {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -98,33 +95,6 @@ export default function RegisterPage() {
               className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               placeholder="Confirm Password"
               value={formData.re_password}
-              onChange={handleChange}
-            />
-            <select
-              name="role"
-              className="appearance-none relative block w-full px-3 py-2 border border-gray-300 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              value={formData.role}
-              onChange={handleChange}
-            >
-              <option value="general">General</option>
-              <option value="player">Player</option>
-              <option value="captain">Captain</option>
-              <option value="admin">Admin</option>
-            </select>
-            <input
-              name="department"
-              type="text"
-              className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              placeholder="Department (optional)"
-              value={formData.department}
-              onChange={handleChange}
-            />
-            <input
-              name="contact_no"
-              type="tel"
-              className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              placeholder="Contact Number (optional)"
-              value={formData.contact_no}
               onChange={handleChange}
             />
           </div>

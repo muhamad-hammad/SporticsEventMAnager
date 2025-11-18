@@ -11,7 +11,7 @@ export default function HousesPage() {
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     house_name: '',
-    status: 'pending',
+    status: 'pending' as 'pending' | 'active' | 'inactive',
   });
 
   useEffect(() => {
@@ -36,8 +36,8 @@ export default function HousesPage() {
       setShowForm(false);
       setFormData({ house_name: '', status: 'pending' });
       fetchHouses();
-    } catch (error) {
-      console.error('Failed to create house:', error);
+    } catch (error: any) {
+      alert(error.response?.data?.house_name?.[0] || 'Failed to create house');
     }
   };
 
@@ -97,7 +97,7 @@ export default function HousesPage() {
                 <select
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value as 'pending' | 'active' | 'inactive' })}
                 >
                   <option value="pending">Pending</option>
                   <option value="active">Active</option>

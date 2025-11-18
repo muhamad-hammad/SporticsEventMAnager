@@ -14,8 +14,8 @@ export default function Navbar() {
     { href: '/houses', label: 'Houses' },
     { href: '/teams', label: 'Teams' },
     { href: '/courts', label: 'Courts' },
-    { href: '/bookings', label: 'Bookings' },
-    { href: '/player-registration', label: 'Player Registration' },
+    { href: '/bookings', label: 'Book Court' },
+    { href: '/player-registration', label: 'Register' },
   ];
 
   return (

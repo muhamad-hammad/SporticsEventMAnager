@@ -80,11 +80,17 @@ class RegisterSportView(APIView):
 
 
 class CreateBooking(APIView):
-    permission_classes = [permissions.IsAuthenticated]  # JWT ensures user is logged in
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         serializer = BookingSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(user=request.user)
-            return Response({"message": "Booking confirmed!"}, status=status.HTTP_201_CREATED)
+            return Response({"message": "Booking request submitted! Waiting for admin approval."}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request):
+        # Get user's bookings
+        bookings = Booking.objects.filter(user=request.user).order_by('-created_at')
+        serializer = BookingSerializer(bookings, many=True)
+        return Response(serializer.data)

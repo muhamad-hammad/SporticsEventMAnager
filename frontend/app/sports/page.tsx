@@ -37,8 +37,8 @@ export default function SportsPage() {
       setShowForm(false);
       setFormData({ sport_name: '', event_type: 'LOG', team_based: true });
       fetchSports();
-    } catch (error) {
-      console.error('Failed to create sport:', error);
+    } catch (error: any) {
+      alert(error.response?.data?.sport_name?.[0] || 'Failed to create sport');
     }
   };
 
@@ -48,7 +48,7 @@ export default function SportsPage() {
         await api.delete(`/api/sports/${id}/`);
         fetchSports();
       } catch (error) {
-        console.error('Failed to delete sport:', error);
+        alert('Failed to delete sport');
       }
     }
   };

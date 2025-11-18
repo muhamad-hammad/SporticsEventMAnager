@@ -3,9 +3,9 @@ export interface User {
   username: string;
   email: string;
   role: 'general' | 'player' | 'captain' | 'admin';
-  department?: string;
-  contact_no?: string;
-  house?: string;
+  department?: string | null;
+  contact_no?: string | null;
+  house?: string | null;
 }
 
 export interface House {
@@ -30,15 +30,6 @@ export interface Player {
   joined_at: string;
 }
 
-export interface PlayerSportRegistration {
-  id: number;
-  player: Player;
-  sport: Sport;
-  approved_by_admin: boolean;
-  remarks?: string;
-  registered_at: string;
-}
-
 export interface Team {
   id: number;
   team_name: string;
@@ -48,16 +39,6 @@ export interface Team {
   created_by: User;
   captain: User;
   created_at: string;
-}
-
-export interface TeamPlayer {
-  id: number;
-  team: Team;
-  player: Player;
-  is_captain: boolean;
-  status: 'drafted' | 'active' | 'released';
-  draft_round?: number;
-  joined_at: string;
 }
 
 export interface Court {
@@ -70,11 +51,13 @@ export interface Court {
 
 export interface Booking {
   id: number;
-  court: Court;
-  user: User;
+  court: number;
+  court_details?: Court;
+  user?: User;
   date: string;
   start_time: string;
   end_time: string;
+  status: 'pending' | 'approved' | 'rejected';
   created_at: string;
 }
 
@@ -83,9 +66,6 @@ export interface RegisterData {
   email: string;
   password: string;
   re_password: string;
-  role?: string;
-  department?: string;
-  contact_no?: string;
 }
 
 export interface LoginData {

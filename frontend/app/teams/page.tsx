@@ -43,16 +43,21 @@ export default function TeamsPage() {
     e.preventDefault();
     try {
       const payload = {
-        ...formData,
+        team_name: formData.team_name,
+        event_type: formData.event_type,
         sport: parseInt(formData.sport),
-        house: formData.house ? parseInt(formData.house) : null,
+        house: formData.house ? parseInt(formData.house) : undefined,
       };
       await api.post('/api/teams/', payload);
       setShowForm(false);
       setFormData({ team_name: '', event_type: 'LOG', sport: '', house: '' });
       fetchData();
-    } catch (error) {
-      console.error('Failed to create team:', error);
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.team_name?.[0] || 
+                      error.response?.data?.detail ||
+                      error.response?.data?.non_field_errors?.[0] ||
+                      'Failed to create team';
+      alert(errorMsg);
     }
   };
 

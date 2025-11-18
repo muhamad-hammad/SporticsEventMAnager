@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import api from '@/lib/api';
-import { Court } from '@/types';
+import { Court, Booking } from '@/types';
 
 export default function BookingsPage() {
   const [courts, setCourts] = useState<Court[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [formData, setFormData] = useState({
@@ -18,6 +19,7 @@ export default function BookingsPage() {
 
   useEffect(() => {
     fetchCourts();
+    fetchBookings();
   }, []);
 
   const fetchCourts = async () => {
@@ -29,6 +31,15 @@ export default function BookingsPage() {
     }
   };
 
+  const fetchBookings = async () => {
+    try {
+      const response = await api.get('/api/book-slot/');
+      setBookings(response.data);
+    } catch (error) {
+      console.error('Failed to fetch bookings:', error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage('');
@@ -36,14 +47,18 @@ export default function BookingsPage() {
 
     try {
       const payload = {
-        ...formData,
         court: parseInt(formData.court),
+        date: formData.date,
+        start_time: formData.start_time,
+        end_time: formData.end_time,
       };
-      await api.post('/api/book-slot/', payload);
-      setMessage('Booking successful!');
+      const response = await api.post('/api/book-slot/', payload);
+      setMessage(response.data.message || 'Booking request submitted! Waiting for admin approval.');
       setFormData({ court: '', date: '', start_time: '', end_time: '' });
+      fetchBookings(); // Refresh bookings list
     } catch (error: any) {
-      const errorMsg = error.response?.data?.error || 
+      const errorMsg = error.response?.data?.non_field_errors?.[0] ||
+                      error.response?.data?.error || 
                       error.response?.data?.detail ||
                       'Failed to create booking. Please try again.';
       setMessage(errorMsg);
@@ -138,6 +153,48 @@ export default function BookingsPage() {
               {loading ? 'Booking...' : 'Book Court'}
             </button>
           </form>
+        </div>
+
+        {/* My Bookings */}
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">My Bookings</h2>
+          {bookings.length === 0 ? (
+            <p className="text-gray-600">No bookings yet.</p>
+          ) : (
+            <div className="space-y-4">
+              {bookings.map((booking) => (
+                <div key={booking.id} className="bg-white rounded-lg shadow-md p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-semibold text-lg">
+                        {booking.court_details?.court_name || `Court ${booking.court}`}
+                      </h3>
+                      <p className="text-gray-600">
+                        📅 {new Date(booking.date).toLocaleDateString()}
+                      </p>
+                      <p className="text-gray-600">
+                        🕐 {booking.start_time} - {booking.end_time}
+                      </p>
+                      {booking.court_details && (
+                        <p className="text-sm text-gray-500">
+                          📍 {booking.court_details.location} | ${booking.court_details.hourly_rate}/hr
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                        booking.status === 'approved' ? 'bg-green-100 text-green-800' :
+                        booking.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {booking.status.toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </ProtectedRoute>

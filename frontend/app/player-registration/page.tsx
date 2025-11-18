@@ -39,12 +39,13 @@ export default function PlayerRegistrationPage() {
     setLoading(true);
 
     try {
-      await api.post('/api/player/register/');
+      await api.post('/api/player/register/', {});
       setMessage('Successfully registered as a player!');
       setIsPlayer(true);
     } catch (error: any) {
       const errorMsg = error.response?.data?.error || 
                       error.response?.data?.detail ||
+                      error.response?.data?.bio?.[0] ||
                       'Failed to register as player. You may already be registered.';
       setMessage(errorMsg);
     } finally {

@@ -11,7 +11,7 @@ from .models import (
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "username", "email", "role", "department", "contact_no", "house"]
+        fields = ["id", "username", "email", "role", "department", "contact_no"]
 
 
 # -----------------------------
@@ -101,9 +101,13 @@ class CourtSerializer(serializers.ModelSerializer):
 # -----------------------------
 
 class BookingSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    court_details = CourtSerializer(source='court', read_only=True)
+    
     class Meta:
         model = Booking
-        fields = ["id", "court", "date", "start_time", "end_time"]
+        fields = ["id", "court", "court_details", "user", "date", "start_time", "end_time", "status", "created_at"]
+        read_only_fields = ["status", "created_at", "user"]
 
     def validate(self, data):
         court = data['court']
@@ -111,11 +115,13 @@ class BookingSerializer(serializers.ModelSerializer):
         start = data['start_time']
         end = data['end_time']
 
+        # Only check for approved bookings
         if Booking.objects.filter(
             court=court,
             date=date,
             start_time__lt=end,
-            end_time__gt=start
+            end_time__gt=start,
+            status='approved'
         ).exists():
             raise serializers.ValidationError("This time slot is already booked.")
         return data

@@ -8,12 +8,12 @@ export default function DashboardPage() {
   const { user } = useAuth();
 
   const features = [
-    { title: 'Sports', description: 'Manage sports events', href: '/sports', icon: '🏆' },
-    { title: 'Houses', description: 'Manage houses and captains', href: '/houses', icon: '🏠' },
-    { title: 'Teams', description: 'Create and manage teams', href: '/teams', icon: '👥' },
+    { title: 'Sports', description: 'View and manage sports', href: '/sports', icon: '🏆' },
+    { title: 'Houses', description: 'View and manage houses', href: '/houses', icon: '🏠' },
+    { title: 'Teams', description: 'View and manage teams', href: '/teams', icon: '👥' },
     { title: 'Courts', description: 'View available courts', href: '/courts', icon: '🎾' },
-    { title: 'Bookings', description: 'Book court time slots', href: '/bookings', icon: '📅' },
-    { title: 'Player Registration', description: 'Register as a player', href: '/player-registration', icon: '✍️' },
+    { title: 'Book Court', description: 'Book a court slot', href: '/bookings', icon: '📅' },
+    { title: 'Register Player', description: 'Register as player & for sports', href: '/player-registration', icon: '✍️' },
   ];
 
   return (
@@ -25,7 +25,6 @@ export default function DashboardPage() {
           </h1>
           <p className="text-gray-600">
             Role: <span className="font-semibold capitalize">{user?.role}</span>
-            {user?.department && ` | Department: ${user.department}`}
           </p>
         </div>
 
