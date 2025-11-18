@@ -1,0 +1,17 @@
+{
+  "name": "sportics-event-manager",
+  "version": "1.0.0",
+  "description": "Sports event management system with Django backend and Next.js frontend",
+  "scripts": {
+    "install:frontend": "cd frontend && npm install",
+    "install:backend": "pip install -r requirements.txt",
+    "setup": "npm run install:backend && npm run install:frontend",
+    "dev:backend": "python manage.py runserver",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "start": "npm run dev"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

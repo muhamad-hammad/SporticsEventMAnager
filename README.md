@@ -4,14 +4,40 @@ Simple sports event management system with Django REST API backend and Next.js f
 
 ## Running the Application
 
-### Start Backend (Django)
+### Prerequisites
+- Python 3.12+
+- Node.js 20+
+- npm 10+
+
+### First Time Setup
+Install all dependencies (backend and frontend):
 ```bash
-cd C:\Users\Ayesh\OneDrive\Documents\uni\sem5\DB\project\SporticsEventMAnager
-.venv\Scripts\python.exe manage.py runserver
+pip install -r requirements.txt
+cd frontend && npm install
+```
+
+Or use the setup script:
+```bash
+npm run setup
+```
+
+### Quick Start (Both Servers)
+Run both backend and frontend servers simultaneously:
+```bash
+npm run dev
+```
+- Backend runs at: **http://127.0.0.1:8000**
+- Frontend runs at: **http://localhost:3000**
+
+### Individual Servers
+
+#### Start Backend (Django) Only
+```bash
+python manage.py runserver
 ```
 Backend runs at: **http://127.0.0.1:8000**
 
-### Start Frontend (Next.js)
+#### Start Frontend (Next.js) Only
 ```bash
 cd frontend
 npm run dev
