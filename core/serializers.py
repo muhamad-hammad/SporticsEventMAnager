@@ -3,6 +3,8 @@ from .models import (
     User, Player, Sport, PlayerSportRegistration,
     Team, TeamPlayer, House, Courts, Booking
 )
+from decimal import Decimal
+from datetime import datetime
 
 
 # -----------------------------
@@ -100,22 +102,46 @@ class CourtSerializer(serializers.ModelSerializer):
 # COURT BOOKING SERIALIZER
 # -----------------------------
 
+
+
+
 class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
-        fields = ["id", "court", "date", "start_time", "end_time"]
+        fields = ("id", "court", "date", "start_time", "end_time", "total_cost", "status", "created_at")
+        read_only_fields = ("id", "total_cost", "status", "created_at")
 
     def validate(self, data):
-        court = data['court']
-        date = data['date']
-        start = data['start_time']
-        end = data['end_time']
-
-        if Booking.objects.filter(
-            court=court,
-            date=date,
-            start_time__lt=end,
-            end_time__gt=start
-        ).exists():
-            raise serializers.ValidationError("This time slot is already booked.")
+        # basic time validation
+        start = data.get("start_time")
+        end = data.get("end_time")
+        if end <= start:
+            raise serializers.ValidationError("end_time must be after start_time.")
         return data
+
+    def create(self, validated_data):
+        # Calculate total cost and create booking. We expect view to call inside an atomic block.
+        court = validated_data["court"]
+        start_time = validated_data["start_time"]
+        end_time = validated_data["end_time"]
+        date = validated_data["date"]
+
+        # compute hours as decimal hours (supports non-whole hours if needed)
+        start_dt = datetime.combine(date, start_time)
+        end_dt = datetime.combine(date, end_time)
+        seconds = (end_dt - start_dt).total_seconds()
+        hours = Decimal(seconds) / Decimal(3600)
+
+        # total cost = hours * hourly_rate
+        total_cost = (hours * court.hourly_rate).quantize(Decimal("0.01"))
+
+        validated_data["total_cost"] = total_cost
+
+        # set user in view: serializer.save(user=request.user)
+        return super().create(validated_data)
+
+
+class AvailableSlotSerializer(serializers.Serializer):
+    start_time = serializers.CharField()
+    end_time = serializers.CharField()
+    is_available = serializers.BooleanField()

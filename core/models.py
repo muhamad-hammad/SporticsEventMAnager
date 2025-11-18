@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from django.conf import settings
-
+from decimal import Decimal
 # --------------------------------------------------
 # CUSTOM USER MODEL
 # --------------------------------------------------
@@ -145,23 +145,38 @@ class TeamPlayer(models.Model):
 # COURT BOOKING SYSTEM
 # --------------------------------------------------
 
+
 class Courts(models.Model):
     court_name = models.CharField(max_length=100)
-    location = models.CharField(max_length=100)
-    hourly_rate = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.BooleanField(default=True)
+    location = models.CharField(max_length=100, blank=True)
+    hourly_rate = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
+    status = models.BooleanField(default=True)  # active / inactive
 
     def __str__(self):
         return self.court_name
 
 
 class Booking(models.Model):
-    court = models.ForeignKey(Courts, on_delete=models.CASCADE)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    STATUS_CHOICES = (
+        ("pending", "Pending"),
+        ("confirmed", "Confirmed"),
+        ("cancelled", "Cancelled"),
+    )
+
+    court = models.ForeignKey(Courts, on_delete=models.CASCADE, related_name="bookings")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="bookings")
     date = models.DateField()
     start_time = models.TimeField()
     end_time = models.TimeField()
+    total_cost = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ("-created_at",)
+        constraints = [
+            models.CheckConstraint(check=models.Q(end_time__gt=models.F('start_time')), name="end_after_start"),
+        ]
+
     def __str__(self):
-        return f"{self.user.username} | {self.court.court_name} | {self.date} {self.start_time}-{self.end_time}"
+        return f"{self.user} | {self.court} | {self.date} {self.start_time}-{self.end_time}"

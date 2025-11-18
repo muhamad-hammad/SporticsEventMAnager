@@ -1,6 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import RegisterPlayer, SportViewSet, HouseViewSet, TeamViewSet,RegisterSportView,CreateBooking
+from .views import( RegisterPlayer, SportViewSet, HouseViewSet, TeamViewSet,RegisterSportView,CreateBooking
+,AvailableSlots, CreateBooking, MyBookings, GetBooking, CalculateCost)
+
 from . import views
 
 router = DefaultRouter()
@@ -13,7 +15,14 @@ urlpatterns = [
     path("courts/", views.get_courts),           # new court APIs
     path('player/register/', RegisterPlayer.as_view()), # new player registration API
     path("register-sport/", RegisterSportView.as_view(), name="register-sport"), # new sport registration API
-    path("book-slot/", CreateBooking.as_view(), name="book-slot"),  # new slot booking API
+    path("courts/<int:court_id>/available-slots/", AvailableSlots.as_view(), name="available-slots"), # available slots API
+    path("book-slot/", CreateBooking.as_view(), name="book-slot"), # booking API
+    path("my-bookings/", MyBookings.as_view(), name="my-bookings"), # my bookings API
+    path("booking/<int:booking_id>/", GetBooking.as_view(), name="get-booking"), # get booking details API
+    path("calculate-cost/", CalculateCost.as_view(), name="calculate-cost"), # calculate cost API
+
 ]
+
+
 
 
