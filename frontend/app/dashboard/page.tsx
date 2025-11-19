@@ -8,12 +8,9 @@ export default function DashboardPage() {
   const { user } = useAuth();
 
   const features = [
-    { title: 'Sports', description: 'View and manage sports', href: '/sports', icon: '🏆' },
-    { title: 'Houses', description: 'View and manage houses', href: '/houses', icon: '🏠' },
-    { title: 'Teams', description: 'View and manage teams', href: '/teams', icon: '👥' },
-    { title: 'Courts', description: 'View available courts', href: '/courts', icon: '🎾' },
-    { title: 'Book Court', description: 'Book a court slot', href: '/bookings', icon: '📅' },
-    { title: 'Register Player', description: 'Register as player & for sports', href: '/player-registration', icon: '✍️' },
+    { id: 'olympiad', title: 'Olympiad', description: 'Coming soon...', href: '#', icon: '🏅' },
+    { id: 'league', title: 'League of Glory', description: 'Coming soon...', href: '#', icon: '⚔️' },
+    { id: 'booking', title: 'Book a Court', description: 'View courts info and book slots', href: '/courts-info', icon: '🎾' },
   ];
 
   return (
@@ -31,7 +28,7 @@ export default function DashboardPage() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature) => (
             <Link
-              key={feature.href}
+              key={feature.id}
               href={feature.href}
               className="bg-white rounded-lg shadow-md p-6 hover:shadow-xl transition-shadow duration-300 transform hover:-translate-y-1"
             >

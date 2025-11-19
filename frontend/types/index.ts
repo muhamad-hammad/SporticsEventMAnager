@@ -57,6 +57,7 @@ export interface Booking {
   date: string;
   start_time: string;
   end_time: string;
+  total_cost?: string;
   status: 'pending' | 'approved' | 'rejected';
   created_at: string;
 }

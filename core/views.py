@@ -89,7 +89,9 @@ class RegisterSportView(APIView):
 def _generate_hourly_slots(start_hour: int, end_hour: int):
     """Yield (start_time, end_time) pairs as time objects for each 1-hour slot."""
     for h in range(start_hour, end_hour):
-        yield (time(h, 0), time(h + 1, 0))
+        # Handle the case where h + 1 would be 24 (invalid for time())
+        end_h = (h + 1) % 24 if h + 1 == 24 else h + 1
+        yield (time(h, 0), time(end_h, 0))
 
 class AvailableSlots(APIView):
     permission_classes = [IsAuthenticated]

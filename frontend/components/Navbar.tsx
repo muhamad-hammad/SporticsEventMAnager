@@ -10,12 +10,9 @@ export default function Navbar() {
 
   const navLinks = [
     { href: '/dashboard', label: 'Dashboard' },
-    { href: '/sports', label: 'Sports' },
-    { href: '/houses', label: 'Houses' },
-    { href: '/teams', label: 'Teams' },
-    { href: '/courts', label: 'Courts' },
-    { href: '/bookings', label: 'Book Court' },
-    { href: '/player-registration', label: 'Register' },
+    { href: '/courts-info', label: 'Courts' },
+    { href: '/courts', label: 'Book Court' },
+    { href: '/bookings', label: 'View Bookings' },
   ];
 
   return (
