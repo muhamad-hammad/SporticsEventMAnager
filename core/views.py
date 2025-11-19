@@ -169,7 +169,7 @@ class CreateBooking(APIView):
             ).exists()
 
             if overlapping:
-                return Response({"non_field_errors": ["This time slot is already booked."]},
+                return Response({"error": "This time slot is already booked. Please choose a different time."},
                                 status=status.HTTP_400_BAD_REQUEST)
 
             # safe to create
@@ -186,9 +186,9 @@ class MyBookings(APIView):
 
     def get(self, request):
         user = request.user
-        bookings = Booking.objects.filter(user=user)
+        bookings = Booking.objects.filter(user=user).order_by('-created_at')
         data = BookingSerializer(bookings, many=True).data
-        return Response({"user": user.username, "bookings": data})
+        return Response(data)
 
 
 class GetBooking(APIView):

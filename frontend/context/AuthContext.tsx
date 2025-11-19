@@ -23,6 +23,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const initAuth = async () => {
+      // Ensure we're in the browser before accessing localStorage
+      if (typeof window === 'undefined') {
+        setLoading(false);
+        return;
+      }
+      
       const token = localStorage.getItem('access_token');
       if (token) {
         try {
@@ -45,8 +51,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await api.post<TokenResponse>('/auth/jwt/create/', data);
       const { access, refresh } = response.data;
       
-      localStorage.setItem('access_token', access);
-      localStorage.setItem('refresh_token', refresh);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('access_token', access);
+        localStorage.setItem('refresh_token', refresh);
+      }
 
       const userResponse = await api.get<User>('/auth/users/me/');
       setUser(userResponse.data);
@@ -70,8 +78,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+    }
     setUser(null);
     router.push('/login');
   };

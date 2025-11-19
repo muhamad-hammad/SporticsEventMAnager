@@ -24,19 +24,27 @@ export default function BookingsPage() {
 
   const fetchCourts = async () => {
     try {
+      console.log('Fetching courts...');
       const response = await api.get('/api/courts/');
+      console.log('Courts response:', response.data);
       setCourts(response.data.filter((c: Court) => c.status));
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch courts:', error);
+      console.error('Error details:', error.response?.data);
     }
   };
 
   const fetchBookings = async () => {
     try {
-      const response = await api.get('/api/book-slot/');
-      setBookings(response.data);
-    } catch (error) {
+      console.log('Fetching bookings...');
+      const response = await api.get('/api/my-bookings/');
+      console.log('Bookings response:', response.data);
+      // Ensure we always set an array
+      setBookings(Array.isArray(response.data) ? response.data : []);
+    } catch (error: any) {
       console.error('Failed to fetch bookings:', error);
+      console.error('Error details:', error.response?.data);
+      setBookings([]); // Set empty array on error
     }
   };
 
@@ -52,14 +60,19 @@ export default function BookingsPage() {
         start_time: formData.start_time,
         end_time: formData.end_time,
       };
+      console.log('Sending booking payload:', payload);
       const response = await api.post('/api/book-slot/', payload);
-      setMessage(response.data.message || 'Booking request submitted! Waiting for admin approval.');
+      console.log('Booking response:', response.data);
+      setMessage(response.data.message || 'Booking confirmed successfully!');
       setFormData({ court: '', date: '', start_time: '', end_time: '' });
       fetchBookings(); // Refresh bookings list
     } catch (error: any) {
+      console.error('Booking error:', error);
+      console.error('Error response:', error.response?.data);
       const errorMsg = error.response?.data?.non_field_errors?.[0] ||
                       error.response?.data?.error || 
                       error.response?.data?.detail ||
+                      JSON.stringify(error.response?.data) ||
                       'Failed to create booking. Please try again.';
       setMessage(errorMsg);
     } finally {
@@ -75,7 +88,7 @@ export default function BookingsPage() {
         <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
           {message && (
             <div className={`mb-4 p-4 rounded ${
-              message.includes('successful') 
+              message.includes('confirmed') || message.includes('success') || message.includes('submitted')
                 ? 'bg-green-100 border border-green-400 text-green-700' 
                 : 'bg-red-100 border border-red-400 text-red-700'
             }`}>
