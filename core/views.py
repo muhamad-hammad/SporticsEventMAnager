@@ -130,7 +130,7 @@ class AvailableSlots(APIView):
         court = get_object_or_404(Courts, id=court_id)
 
         # fetch bookings for court & date
-        bookings = Booking.objects.filter(court=court, date=selected_date)
+        bookings = Booking.objects.filter(court=court, date=selected_date).filter(status__in=['approved', 'pending'])
 
         slots = []
         for s, e in _generate_hourly_slots(start_hour, end_hour):
