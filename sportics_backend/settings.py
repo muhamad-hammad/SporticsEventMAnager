@@ -68,10 +68,15 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
+# settings.py
 DJOSER = {
     "USER_CREATE_PASSWORD_RETYPE": True,
-    "SERIALIZERS": {},
+    "SERIALIZERS": {
+        "user": "core.serializers.UserSerializer",          # for /users/ endpoints
+        "current_user": "core.serializers.UserSerializer",  # specifically for /users/me/
+    },
 }
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

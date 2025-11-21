@@ -46,17 +46,19 @@ class House(models.Model):
 # --------------------------------------------------
 # SPORT MODEL
 # --------------------------------------------------
+
 class Sport(models.Model):
-    sport_name = models.CharField(max_length=100)
-    event_type = models.CharField(
+    sports_name = models.CharField(max_length=100, unique=True ,default="Unknown Sport")
+    min_players = models.IntegerField(default=1)  # Add default if you have existing data
+    max_players = models.IntegerField(default=11) # Add default if you have existing data
+    status = models.CharField(
         max_length=20,
-        choices=[("LOG", "LOG"), ("OLYMPIAD", "OLYMPIAD")]
+        choices=[("General", "General"), ("Esports", "Esports"),("Sports", "Sports")],
+        default="Sports"
     )
-    team_based = models.BooleanField(default=True)
 
     def __str__(self):
-        return self.sport_name
-
+        return self.sports_name
 
 # --------------------------------------------------
 # PLAYER PROFILE (Optional Registration)
@@ -180,3 +182,5 @@ class Booking(models.Model):
 
     def __str__(self):
         return f"{self.user.username} | {self.court.court_name} | {self.date} {self.start_time}-{self.end_time} [{self.status}]"
+
+

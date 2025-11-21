@@ -16,6 +16,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ["id", "username", "email", "role", "department", "contact_no"]
 
 
+
 # -----------------------------
 # PLAYER SERIALIZER
 # -----------------------------
@@ -148,3 +149,6 @@ class AvailableSlotSerializer(serializers.Serializer):
     start_time = serializers.CharField()
     end_time = serializers.CharField()
     is_available = serializers.BooleanField()
+
+
+

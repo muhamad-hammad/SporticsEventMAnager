@@ -17,7 +17,7 @@ from .serializers import (
     PlayerSerializer, SportSerializer,
     PlayerSportRegistrationSerializer, TeamSerializer,
     HouseSerializer, CourtSerializer, BookingSerializer
-    ,AvailableSlotSerializer
+    ,AvailableSlotSerializer,UserSerializer
 )
 
 
@@ -25,6 +25,14 @@ from .serializers import (
 
 
 # Create your views here.
+
+class MeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
+
 
 class SportViewSet(viewsets.ModelViewSet):
     queryset = Sport.objects.all()
@@ -246,3 +254,52 @@ class CalculateCost(APIView):
             "hourly_rate": str(court.hourly_rate),
             "total_cost": str(total_cost)
         })
+    
+
+
+
+class PendingBookings(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role != 'admin':
+            return Response({"detail": "Not authorized"}, status=403)
+
+        bookings = Booking.objects.filter(status='pending')
+        serializer = BookingSerializer(bookings, many=True)
+        return Response(serializer.data)
+
+
+
+class AllBookings(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role != 'admin':
+            return Response({"detail": "Not authorized"}, status=403)
+
+        bookings = Booking.objects.all().order_by('-created_at')
+        serializer = BookingSerializer(bookings, many=True)
+        return Response(serializer.data)
+
+
+
+class UpdateBookingStatus(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, booking_id):
+        if request.user.role != 'admin':
+            return Response({"detail": "Not authorized"}, status=403)
+
+        status = request.data.get('status')
+        if status not in ['approved', 'rejected']:
+            return Response({"detail": "Invalid status"}, status=400)
+
+        try:
+            booking = Booking.objects.get(id=booking_id)
+        except Booking.DoesNotExist:
+            return Response({"detail": "Booking not found"}, status=404)
+
+        booking.status = status
+        booking.save()
+        return Response({"message": f"Booking {status}"})

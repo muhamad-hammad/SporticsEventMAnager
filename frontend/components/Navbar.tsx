@@ -15,6 +15,10 @@ export default function Navbar() {
     { href: '/bookings', label: 'View Bookings' },
   ];
 
+  const adminLinks = [
+    { href: '/admin/dashboard', label: 'Admin Panel' },
+  ];
+
   return (
     <nav className="bg-white shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -26,6 +30,19 @@ export default function Navbar() {
             {isAuthenticated && (
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                 {navLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                      pathname === link.href
+                        ? 'border-blue-500 text-gray-900'
+                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+                {user?.role === 'admin' && adminLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
