@@ -130,7 +130,7 @@ class AvailableSlots(APIView):
         court = get_object_or_404(Courts, id=court_id)
 
         # fetch bookings for court & date
-        bookings = Booking.objects.filter(court=court, date=selected_date).filter(status__in=['approved', 'pending'])
+        bookings = Booking.objects.filter(court=court, date=selected_date, status__in=['approved', 'pending'])
 
         slots = []
         for s, e in _generate_hourly_slots(start_hour, end_hour):
@@ -167,13 +167,14 @@ class CreateBooking(APIView):
         date = serializer.validated_data["date"]
         start_time = serializer.validated_data["start_time"]
         end_time = serializer.validated_data["end_time"]
-
+       
         # Use transaction to reduce race-window and re-check overlaps inside transaction
         with transaction.atomic():
             # Re-check overlap under transaction
             overlapping = Booking.objects.select_for_update().filter(
                 court=court,
                 date=date,
+                status__in=['approved', 'pending'],  # <-- ignore rejected bookings
                 start_time__lt=end_time,
                 end_time__gt=start_time
             ).exists()
