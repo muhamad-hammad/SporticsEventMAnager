@@ -1,7 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import( RegisterPlayer, SportViewSet, HouseViewSet, TeamViewSet,RegisterSportView,CreateBooking
-,AvailableSlots, CreateBooking, MyBookings, GetBooking, CalculateCost,PendingBookings,  AllBookings, UpdateBookingStatus, BulkBookCourt)
+from .views import( RegisterPlayer, SportDetailListAPIView, SportViewSet,SportRegistrationViewSet, HouseViewSet, TeamViewSet,RegisterSportView,CreateBooking
+,AvailableSlots, CreateBooking, MyBookings, GetBooking, CalculateCost,PendingBookings,  AllBookings, UpdateBookingStatus, BulkBookCourt
+, TeamRegistrationCreateAPIView, TeamRegistrationListAPIView, ApproveTeamRegistrationAPIView)
 
 from . import views
 
@@ -9,6 +10,7 @@ router = DefaultRouter()
 router.register('sports', SportViewSet)
 router.register('houses', HouseViewSet)
 router.register('teams', TeamViewSet)
+router.register('sport-registration', SportRegistrationViewSet)
 
 
 urlpatterns = [
@@ -25,6 +27,11 @@ urlpatterns = [
     path('admin/bookings/pending/', PendingBookings.as_view()), # pending bookings for admin
     path('admin/bookings/update-status/<int:booking_id>/', UpdateBookingStatus.as_view(), name='update-booking-status'),    # update booking status API
     path('admin/bookings/all/', AllBookings.as_view()), # all bookings for admin
+    
+    path('olympiad/team/register/', TeamRegistrationCreateAPIView.as_view(), name='olympiad-team-register'),
+    path('olympiad/teams/', TeamRegistrationListAPIView.as_view(), name='olympiad-team-list'),
+    path('olympiad/team/<int:team_id>/approve/', ApproveTeamRegistrationAPIView.as_view(), name='olympiad-team-approve'),
+    path('olympiad/sports/', SportDetailListAPIView.as_view(), name='sports-detail-list'),
 
 ]
 

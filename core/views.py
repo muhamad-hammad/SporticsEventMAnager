@@ -8,16 +8,17 @@ from django.db import transaction
 from datetime import datetime, time, timedelta
 from decimal import Decimal
 from django.shortcuts import get_object_or_404
-
+from rest_framework.permissions import IsAdminUser
+from rest_framework import generics
 from .models import (
-    Player, Sport, PlayerSportRegistration,
-    Team, House, Courts, Booking
+    Player, Sport, PlayerSportRegistration, SportRegistration,
+    Team, House, Courts, Booking, TeamRegistration
 )
 from .serializers import (
     PlayerSerializer, SportSerializer,
     PlayerSportRegistrationSerializer, TeamSerializer,
-    HouseSerializer, CourtSerializer, BookingSerializer
-    ,AvailableSlotSerializer,UserSerializer
+    HouseSerializer, CourtSerializer, BookingSerializer, TeamRegistrationSerializer
+    ,AvailableSlotSerializer,UserSerializer,SportRegistrationSerializer, SportDetailSerializer
 )
 
 
@@ -190,8 +191,6 @@ class CreateBooking(APIView):
             "message": "Booking confirmed!",
             "booking": BookingSerializer(booking).data
         }, status=status.HTTP_201_CREATED)
-
-
 class BulkBookCourt(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -265,6 +264,7 @@ class BulkBookCourt(APIView):
             "message": f"{len(created_bookings)} bookings confirmed!",
             "bookings": BookingSerializer(created_bookings, many=True).data
         }, status=status.HTTP_201_CREATED)
+
 
 
 class MyBookings(APIView):
@@ -379,3 +379,46 @@ class UpdateBookingStatus(APIView):
         booking.status = status
         booking.save()
         return Response({"message": f"Booking {status}"})
+
+
+
+class SportRegistrationViewSet(viewsets.ModelViewSet):
+    queryset = SportRegistration.objects.all()
+    serializer_class = SportRegistrationSerializer
+    permission_classes = [IsAdminUser]  # only admin can set fees
+
+class TeamRegistrationCreateAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    @transaction.atomic
+    def post(self, request):
+        serializer = TeamRegistrationSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        team = serializer.save()
+        return Response(TeamRegistrationSerializer(team).data, status=201)
+
+
+class TeamRegistrationListAPIView(generics.ListAPIView):
+    """List all Olympiad teams"""
+    serializer_class = TeamRegistrationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return TeamRegistration.objects.select_related("sport", "sport_registration", "captain").prefetch_related("players")
+
+
+class ApproveTeamRegistrationAPIView(APIView):
+    """Admin approves Olympiad team"""
+    permission_classes = [permissions.IsAdminUser]
+
+    def post(self, request, team_id):
+        team = get_object_or_404(TeamRegistration, id=team_id)
+        team.approved = True
+        team.save()
+        return Response({"detail": "Team registration approved"})
+    
+
+class SportDetailListAPIView(generics.ListAPIView):
+    queryset = Sport.objects.all()
+    serializer_class = SportDetailSerializer
+    permission_classes = [IsAuthenticated]  # or AllowAny if public

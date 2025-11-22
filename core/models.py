@@ -60,21 +60,24 @@ class Sport(models.Model):
     def __str__(self):
         return self.sports_name
 
+
+
+
 # --------------------------------------------------
 # PLAYER PROFILE (Optional Registration)
 # --------------------------------------------------
 class Player(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    bio = models.TextField(null=True, blank=True)
     joined_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return f"Player: {self.user.username}"
 
-
 # --------------------------------------------------
 # PLAYER SPORT REGISTRATION
 # --------------------------------------------------
+
+
 class PlayerSportRegistration(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     sport = models.ForeignKey(Sport, on_delete=models.CASCADE)
@@ -85,7 +88,7 @@ class PlayerSportRegistration(models.Model):
         unique_together = ("player", "sport")
 
     def __str__(self):
-        return f"{self.player.user.username} → {self.sport.sport_name}"
+        return f"{self.player.user.username} → {self.sport.sports_name}"
 
 
 # --------------------------------------------------
@@ -184,3 +187,42 @@ class Booking(models.Model):
         return f"{self.user.username} | {self.court.court_name} | {self.date} {self.start_time}-{self.end_time} [{self.status}]"
 
 
+# --------------------------------------------------
+# OLYMPIAD MODELS
+# --------------------------------------------------
+
+#--------------------------------------------------
+# SPORT REGISTRATION DETAILS For Olympiad Events
+#--------------------------------------------------
+
+class SportRegistration(models.Model):
+    sport = models.OneToOneField(Sport, on_delete=models.CASCADE, related_name='registration')
+    entry_fee = models.DecimalField(max_digits=8, decimal_places=2)
+    note = models.CharField(max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.sport.sports_name} - Fee: {self.entry_fee}"
+
+
+class TeamRegistration(models.Model):
+    sport = models.ForeignKey(Sport, on_delete=models.CASCADE)
+    sport_registration = models.ForeignKey(SportRegistration, on_delete=models.SET_NULL, null=True)
+
+    team_name = models.CharField(max_length=150)
+    captain = models.ForeignKey(User, on_delete=models.CASCADE)
+    total_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    approved = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.team_name} ({self.sport.sports_name})"
+
+
+class OlympiadPlayer(models.Model):
+    team = models.ForeignKey(TeamRegistration, on_delete=models.CASCADE, related_name="players")
+    name = models.CharField(max_length=150)
+    age = models.PositiveIntegerField()
+
+    def __str__(self):
+        return f"{self.name} - {self.team.team_name}"
