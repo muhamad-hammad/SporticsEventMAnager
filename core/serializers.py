@@ -258,7 +258,7 @@ class SportDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Sport
-        fields = ['id', 'sports_name', 'status', 'registration_fee']
+        fields = ['id', 'sports_name', 'status', 'registration_fee', 'min_players', 'max_players']
 
     def get_registration_fee(self, obj):
         # Get latest SportRegistration entry for this sport

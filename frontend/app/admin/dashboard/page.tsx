@@ -73,6 +73,20 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {/* Olympiad Management */}
+        <section className="mb-10">
+          <h2 className="text-xl font-semibold mb-3">Olympiad Management</h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            <a href="/admin/olympiad" className="bg-white rounded-lg shadow-md p-6 hover:shadow-xl transition-shadow duration-300 flex items-center space-x-4">
+              <div className="text-4xl">🏅</div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">Manage Teams</h3>
+                <p className="text-gray-600">Approve team registrations</p>
+              </div>
+            </a>
+          </div>
+        </section>
+
         {/* Pending Bookings */}
         <section className="mb-10">
           <h2 className="text-xl font-semibold mb-3">Pending Bookings</h2>
