@@ -17,7 +17,6 @@ interface Booking {
 
 export default function AdminDashboard() {
   const [pending, setPending] = useState<Booking[]>([]);
-  const [allBookings, setAllBookings] = useState<Booking[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState<string>("");
 
@@ -25,17 +24,12 @@ export default function AdminDashboard() {
     fetchData();
   }, []);
 
-  // Fetch pending and all bookings
+  // Fetch pending bookings
   const fetchData = async () => {
     try {
       setError("");
-      const [pendingRes, allRes] = await Promise.all([
-        api.get<Booking[]>("/api/admin/bookings/pending/"),
-        api.get<Booking[]>("/api/admin/bookings/all/"),
-      ]);
-
-      setPending(pendingRes.data);
-      setAllBookings(allRes.data);
+      const response = await api.get<Booking[]>("/api/admin/bookings/pending/");
+      setPending(response.data);
     } catch (err: any) {
       console.error(err);
       setError(err.response?.data?.detail || "Failed to load bookings");
@@ -52,9 +46,8 @@ export default function AdminDashboard() {
       setError('');
       await api.post(`/api/admin/bookings/update-status/${id}/`, { status });
 
-      // Optimistically update pending and all bookings
+      // Optimistically update pending bookings
       setPending(prev => prev.filter(b => b.id !== id));
-      setAllBookings(prev => prev.map(b => (b.id === id ? { ...b, status } : b)));
     } catch (err: any) {
       console.error(err);
       setError(err.response?.data?.detail || `Failed to ${status} booking`);
@@ -124,37 +117,6 @@ export default function AdminDashboard() {
               </tbody>
             </table>
           )}
-        </section>
-
-        {/* All Bookings */}
-        <section>
-          <h2 className="text-xl font-semibold mb-3">All Bookings</h2>
-          <table className="w-full border-collapse border border-gray-300">
-            <thead>
-              <tr className="bg-gray-200">
-                <th className="border px-2 py-1">User</th>
-                <th className="border px-2 py-1">Court</th>
-                <th className="border px-2 py-1">Date</th>
-                <th className="border px-2 py-1">Time</th>
-                <th className="border px-2 py-1">Total Cost</th>
-                <th className="border px-2 py-1">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {allBookings.map((b) => (
-                <tr key={b.id} className="border">
-                  <td className="border px-2 py-1">{b.user.username}</td>
-                  <td className="border px-2 py-1">{b.court_details.court_name}</td>
-                  <td className="border px-2 py-1">{b.date}</td>
-                  <td className="border px-2 py-1">{b.start_time} - {b.end_time}</td>
-                  <td className="border px-2 py-1">{b.total_cost}</td>
-                  <td className={`border px-2 py-1 ${statusColors[b.status] || ''}`}>
-                    {b.status}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </section>
       </div>
     </AdminRoute>

@@ -8,8 +8,11 @@ export default function Navbar() {
   const { user, logout, isAuthenticated } = useAuth();
   const pathname = usePathname();
 
-  const navLinks = [
+  const commonLinks = [
     { href: '/dashboard', label: 'Dashboard' },
+  ];
+
+  const userLinks = [
     { href: '/courts-info', label: 'Courts' },
     { href: '/courts', label: 'Book Court' },
     { href: '/bookings', label: 'View Bookings' },
@@ -17,6 +20,7 @@ export default function Navbar() {
 
   const adminLinks = [
     { href: '/admin/dashboard', label: 'Admin Panel' },
+    { href: '/admin/bookings', label: 'All Bookings' },
   ];
 
   return (
@@ -29,28 +33,43 @@ export default function Navbar() {
             </Link>
             {isAuthenticated && (
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                {navLinks.map((link) => (
+                {/* Common Links (Dashboard) */}
+                {commonLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                      pathname === link.href
-                        ? 'border-blue-500 text-gray-900'
-                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                    }`}
+                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${pathname === link.href
+                      ? 'border-blue-500 text-gray-900'
+                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                      }`}
                   >
                     {link.label}
                   </Link>
                 ))}
+
+                {/* Admin Links */}
                 {user?.role === 'admin' && adminLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                      pathname === link.href
-                        ? 'border-blue-500 text-gray-900'
-                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                    }`}
+                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${pathname === link.href
+                      ? 'border-blue-500 text-gray-900'
+                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                      }`}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+
+                {/* User Links (Non-Admin) */}
+                {user?.role !== 'admin' && userLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${pathname === link.href
+                      ? 'border-blue-500 text-gray-900'
+                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                      }`}
                   >
                     {link.label}
                   </Link>
