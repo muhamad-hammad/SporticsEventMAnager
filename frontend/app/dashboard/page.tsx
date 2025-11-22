@@ -8,7 +8,7 @@ export default function DashboardPage() {
   const { user } = useAuth();
 
   const features = [
-    { id: 'olympiad', title: 'Olympiad', description: 'Coming soon...', href: '#', icon: '🏅' },
+    { id: 'olympiad', title: 'Olympiad', description: 'Register your team now!', href: '/olympiad/register', icon: '🏅' },
     { id: 'league', title: 'League of Glory', description: 'Coming soon...', href: '#', icon: '⚔️' },
     { id: 'booking', title: 'Book a Court', description: 'View courts info and book slots', href: '/courts-info', icon: '🎾' },
   ];

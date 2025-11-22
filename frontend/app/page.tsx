@@ -27,29 +27,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 mt-20">
-          <div className="bg-white bg-opacity-10 backdrop-blur-lg rounded-xl p-8 text-white">
-            <div className="text-4xl mb-4">🏆</div>
-            <h3 className="text-2xl font-bold mb-3">Manage Sports</h3>
-            <p className="opacity-90">
-              Organize LOG and OLYMPIAD events with team-based or individual sports
-            </p>
-          </div>
-          <div className="bg-white bg-opacity-10 backdrop-blur-lg rounded-xl p-8 text-white">
-            <div className="text-4xl mb-4">🏠</div>
-            <h3 className="text-2xl font-bold mb-3">House Management</h3>
-            <p className="opacity-90">
-              Create and manage houses with captains and track their status
-            </p>
-          </div>
-          <div className="bg-white bg-opacity-10 backdrop-blur-lg rounded-xl p-8 text-white">
-            <div className="text-4xl mb-4">📅</div>
-            <h3 className="text-2xl font-bold mb-3">Court Bookings</h3>
-            <p className="opacity-90">
-              Book courts for your events with easy time slot management
-            </p>
-          </div>
-        </div>
+
       </div>
     </div>
   );

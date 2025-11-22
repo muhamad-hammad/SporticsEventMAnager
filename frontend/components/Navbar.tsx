@@ -12,7 +12,7 @@ export default function Navbar() {
     { href: '/dashboard', label: 'Dashboard' },
   ];
 
-  const userLinks = [
+  const courtLinks = [
     { href: '/courts-info', label: 'Courts' },
     { href: '/courts', label: 'Book Court' },
     { href: '/bookings', label: 'View Bookings' },
@@ -22,6 +22,22 @@ export default function Navbar() {
     { href: '/admin/dashboard', label: 'Admin Panel' },
     { href: '/admin/bookings', label: 'All Bookings' },
   ];
+
+  const olympiadLinks = [
+    { href: '/olympiad/sports', label: 'Sports' },
+    { href: '/olympiad/teams', label: 'Teams' },
+    { href: '/olympiad/register', label: 'Register' },
+  ];
+
+  const isOlympiadPage = pathname?.startsWith('/olympiad');
+  const isCourtsPage = pathname?.startsWith('/courts') || pathname?.startsWith('/bookings');
+
+  let currentLinks: { href: string; label: string }[] = [];
+  if (isOlympiadPage) {
+    currentLinks = olympiadLinks;
+  } else if (isCourtsPage) {
+    currentLinks = courtLinks;
+  }
 
   return (
     <nav className="bg-white shadow-lg">
@@ -61,8 +77,8 @@ export default function Navbar() {
                   </Link>
                 ))}
 
-                {/* User Links (Non-Admin) */}
-                {user?.role !== 'admin' && userLinks.map((link) => (
+                {/* Context-Aware Links */}
+                {user?.role !== 'admin' && currentLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}

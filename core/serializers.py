@@ -638,7 +638,7 @@ class SportDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Sport
-        fields = ['id', 'sports_name', 'status', 'registration_fee']
+        fields = ['id', 'sports_name', 'status', 'registration_fee', 'min_players', 'max_players']
 
     def get_registration_fee(self, obj):
         # Get latest SportRegistration entry for this sport
@@ -646,75 +646,3 @@ class SportDetailSerializer(serializers.ModelSerializer):
         if sr:
             return sr.entry_fee
         return None
-
-#Match Serializer 
-class MatchSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Match
-        fields = "__all__"
-
-    def to_representation(self, instance):
-        ret = super().to_representation(instance)
-        
-        if instance.event_type == "LOG":
-            if instance.team1:
-                ret['team1'] = TeamSerializer(instance.team1).data
-            if instance.team2:
-                ret['team2'] = TeamSerializer(instance.team2).data
-            if instance.winner:
-                ret['winner'] = TeamSerializer(instance.winner).data
-        else:  # OLYMPIAD
-            if instance.olympiad_team1:
-                ret['olympiad_team1'] = TeamRegistrationSerializer(instance.olympiad_team1).data
-            if instance.olympiad_team2:
-                ret['olympiad_team2'] = TeamRegistrationSerializer(instance.olympiad_team2).data
-            if instance.olympiad_winner:
-                ret['olympiad_winner'] = TeamRegistrationSerializer(instance.olympiad_winner).data
-        
-        return ret
-
-    def validate(self, data):
-        event_type = data.get('event_type') or (self.instance.event_type if self.instance else None)
-        sport = data.get('sport') or (self.instance.sport if self.instance else None)
-        
-        if event_type == "LOG":
-            team1 = data.get('team1') or (self.instance.team1 if self.instance else None)
-            team2 = data.get('team2') or (self.instance.team2 if self.instance else None)
-            
-            if not team1 or not team2:
-                raise serializers.ValidationError("LOG matches must have team1 and team2.")
-            
-            if team1 == team2:
-                raise serializers.ValidationError("Team 1 and Team 2 cannot be the same.")
-            
-            if sport and team1.sport.id != sport.id:
-                raise serializers.ValidationError(
-                    f"{team1.team_name} (sport_id={team1.sport.id}) does not belong to {sport.sports_name} (sport_id={sport.id})."
-                )
-            
-            if sport and team2.sport.id != sport.id:
-                raise serializers.ValidationError(
-                    f"{team2.team_name} (sport_id={team2.sport.id}) does not belong to {sport.sports_name} (sport_id={sport.id})."
-                )
-        
-        elif event_type == "OLYMPIAD":
-            olympiad_team1 = data.get('olympiad_team1') or (self.instance.olympiad_team1 if self.instance else None)
-            olympiad_team2 = data.get('olympiad_team2') or (self.instance.olympiad_team2 if self.instance else None)
-            
-            if not olympiad_team1 or not olympiad_team2:
-                raise serializers.ValidationError("OLYMPIAD matches must have olympiad_team1 and olympiad_team2.")
-            
-            if olympiad_team1 == olympiad_team2:
-                raise serializers.ValidationError("Olympiad Team 1 and Team 2 cannot be the same.")
-            
-            if sport and olympiad_team1.sport.id != sport.id:
-                raise serializers.ValidationError(
-                    f"{olympiad_team1.team_name} (sport_id={olympiad_team1.sport.id}) does not belong to {sport.sports_name} (sport_id={sport.id})."
-                )
-            
-            if sport and olympiad_team2.sport.id != sport.id:
-                raise serializers.ValidationError(
-                    f"{olympiad_team2.team_name} (sport_id={olympiad_team2.sport.id}) does not belong to {sport.sports_name} (sport_id={sport.id})."
-                )
-            
-        return data
