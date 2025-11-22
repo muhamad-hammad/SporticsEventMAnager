@@ -226,3 +226,66 @@ class OlympiadPlayer(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.team.team_name}"
+    
+
+
+
+
+
+
+
+
+
+
+#   Matches
+class Match(models.Model):
+    ROUND_CHOICES = (
+        ("quarter_final", "Quarter Final"),
+        ("semi_final", "Semi Final"),
+        ("final", "Final"),
+    )
+    EVENT_TYPE_CHOICES = (
+        ("LOG", "LOG"),
+        ("OLYMPIAD", "OLYMPIAD"),
+    )
+    
+    sport = models.ForeignKey(Sport, on_delete=models.CASCADE)
+    event_type = models.CharField(max_length=20, choices=EVENT_TYPE_CHOICES, default="LOG")
+    
+    # For LOG teams
+    team1 = models.ForeignKey(Team, related_name='team1_matches', on_delete=models.CASCADE, null=True, blank=True)
+    team2 = models.ForeignKey(Team, related_name='team2_matches', on_delete=models.CASCADE, null=True, blank=True)
+    winner = models.ForeignKey(Team, related_name='won_matches', on_delete=models.SET_NULL, null=True, blank=True)
+    
+    # For Olympiad teams
+    olympiad_team1 = models.ForeignKey(TeamRegistration, related_name='olympiad_team1_matches', on_delete=models.CASCADE, null=True, blank=True)
+    olympiad_team2 = models.ForeignKey(TeamRegistration, related_name='olympiad_team2_matches', on_delete=models.CASCADE, null=True, blank=True)
+    olympiad_winner = models.ForeignKey(TeamRegistration, related_name='olympiad_won_matches', on_delete=models.SET_NULL, null=True, blank=True)
+    
+    date = models.DateTimeField()
+    round = models.CharField(max_length=50, choices=ROUND_CHOICES)
+    status = models.CharField(max_length=20, default="scheduled")  # scheduled / completed
+    score_team1 = models.IntegerField(null=True, blank=True)
+    score_team2 = models.IntegerField(null=True, blank=True)
+    notes = models.TextField(blank=True, null=True)
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        
+        if self.event_type == "LOG":
+            if not self.team1 or not self.team2:
+                raise ValidationError("LOG matches must have team1 and team2 (Team model).")
+            if self.olympiad_team1 or self.olympiad_team2:
+                raise ValidationError("LOG matches cannot have olympiad teams.")
+        
+        if self.event_type == "OLYMPIAD":
+            if not self.olympiad_team1 or not self.olympiad_team2:
+                raise ValidationError("OLYMPIAD matches must have olympiad_team1 and olympiad_team2.")
+            if self.team1 or self.team2:
+                raise ValidationError("OLYMPIAD matches cannot have LOG teams.")
+
+    def __str__(self):
+        if self.event_type == "LOG":
+            return f"{self.team1.team_name} vs {self.team2.team_name} ({self.round})"
+        else:
+            return f"{self.olympiad_team1.team_name} vs {self.olympiad_team2.team_name} ({self.round})"

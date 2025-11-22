@@ -2,7 +2,8 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import( RegisterPlayer, SportDetailListAPIView, SportViewSet,SportRegistrationViewSet, HouseViewSet, TeamViewSet,RegisterSportView,CreateBooking
 ,AvailableSlots, CreateBooking, MyBookings, GetBooking, CalculateCost,PendingBookings,  AllBookings, UpdateBookingStatus, BulkBookCourt
-, TeamRegistrationCreateAPIView, TeamRegistrationListAPIView, ApproveTeamRegistrationAPIView)
+, TeamRegistrationCreateAPIView, TeamRegistrationListAPIView, ApproveTeamRegistrationAPIView, MatchViewSet,
+OlympiadMatchCreateAPIView, OlympiadMatchListAPIView, OlympiadMatchDetailAPIView, OlympiadMatchEnterResultAPIView)
 
 from . import views
 
@@ -11,6 +12,7 @@ router.register('sports', SportViewSet)
 router.register('houses', HouseViewSet)
 router.register('teams', TeamViewSet)
 router.register('sport-registration', SportRegistrationViewSet)
+router.register('matches', MatchViewSet)
 
 
 urlpatterns = [
@@ -32,6 +34,12 @@ urlpatterns = [
     path('olympiad/teams/', TeamRegistrationListAPIView.as_view(), name='olympiad-team-list'),
     path('olympiad/team/<int:team_id>/approve/', ApproveTeamRegistrationAPIView.as_view(), name='olympiad-team-approve'),
     path('olympiad/sports/', SportDetailListAPIView.as_view(), name='sports-detail-list'),
+    
+    # Olympiad Match APIs
+    path('olympiad/match/create/', OlympiadMatchCreateAPIView.as_view(), name='olympiad-match-create'),
+    path('olympiad/matches/', OlympiadMatchListAPIView.as_view(), name='olympiad-match-list'),
+    path('olympiad/match/<int:match_id>/', OlympiadMatchDetailAPIView.as_view(), name='olympiad-match-detail'),
+    path('olympiad/match/<int:match_id>/result/', OlympiadMatchEnterResultAPIView.as_view(), name='olympiad-match-result'),
 
 ]
 
