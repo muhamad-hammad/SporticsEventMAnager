@@ -192,6 +192,81 @@ class CreateBooking(APIView):
         }, status=status.HTTP_201_CREATED)
 
 
+class BulkBookCourt(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        """
+        POST /api/book-slots-bulk/
+        Body: { 
+            "court": int, 
+            "date": "YYYY-MM-DD", 
+            "bookings": [
+                { "start_time": "HH:MM", "end_time": "HH:MM" },
+                ...
+            ] 
+        }
+        """
+        court_id = request.data.get("court")
+        date_str = request.data.get("date")
+        bookings_data = request.data.get("bookings", [])
+
+        if not bookings_data:
+            return Response({"error": "No bookings provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            court = Courts.objects.get(id=court_id)
+            date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        except (Courts.DoesNotExist, ValueError):
+            return Response({"error": "Invalid court or date"}, status=status.HTTP_400_BAD_REQUEST)
+
+        created_bookings = []
+
+        try:
+            with transaction.atomic():
+                for booking_data in bookings_data:
+                    start_time = booking_data.get("start_time")
+                    end_time = booking_data.get("end_time")
+
+                    # Prepare data for serializer
+                    data = {
+                        "court": court.id,
+                        "date": date,
+                        "start_time": start_time,
+                        "end_time": end_time
+                    }
+
+                    serializer = BookingSerializer(data=data)
+                    if not serializer.is_valid():
+                        raise ValueError(str(serializer.errors))
+
+                    # Check overlap
+                    overlapping = Booking.objects.select_for_update().filter(
+                        court=court,
+                        date=date,
+                        status__in=['approved', 'pending'],
+                        start_time__lt=end_time,
+                        end_time__gt=start_time
+                    ).exists()
+
+                    if overlapping:
+                        raise ValueError(f"Time slot {start_time}-{end_time} is already booked.")
+
+                    # Create booking
+                    booking = serializer.save(user=request.user)
+                    created_bookings.append(booking)
+
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": "An unexpected error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response({
+            "message": f"{len(created_bookings)} bookings confirmed!",
+            "bookings": BookingSerializer(created_bookings, many=True).data
+        }, status=status.HTTP_201_CREATED)
+
+
 class MyBookings(APIView):
     permission_classes = [IsAuthenticated]
 
