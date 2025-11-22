@@ -370,9 +370,9 @@ export default function CourtsPage() {
 
         {/* Booking Options Modal */}
         {showBookingOptions && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
-              <h3 className="text-xl font-bold mb-4">Booking Options</h3>
+          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 transition-all duration-300">
+            <div className="bg-white p-6 rounded-lg shadow-2xl max-w-md w-full transform transition-all animate-[fadeIn_0.3s_ease-out] scale-100">
+              <h3 className="text-xl font-bold mb-4 text-gray-900">Booking Options</h3>
               <p className="mb-6 text-gray-600">
                 You have selected non-continuous time slots. How would you like to book?
               </p>
@@ -380,23 +380,23 @@ export default function CourtsPage() {
               <div className="space-y-3">
                 <button
                   onClick={() => processBooking('range')}
-                  className="w-full p-3 border border-blue-500 text-blue-600 rounded hover:bg-blue-50 font-semibold text-left"
+                  className="w-full p-4 border-2 border-blue-100 hover:border-blue-500 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl transition-all duration-200 text-left group"
                 >
-                  <div className="font-bold">Book Range</div>
-                  <div className="text-sm font-normal">Book everything from start to end (including unselected slots)</div>
+                  <div className="font-bold text-lg mb-1">Book Range</div>
+                  <div className="text-sm text-blue-600/80 group-hover:text-blue-700">Book everything from start to end (including unselected slots)</div>
                 </button>
 
                 <button
                   onClick={() => processBooking('individual')}
-                  className="w-full p-3 bg-blue-600 text-white rounded hover:bg-blue-700 font-semibold text-left"
+                  className="w-full p-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all duration-200 text-left shadow-lg hover:shadow-blue-500/30"
                 >
-                  <div className="font-bold">Book Selected Only</div>
-                  <div className="text-sm font-normal">Book only the specific slots you selected</div>
+                  <div className="font-bold text-lg mb-1">Book Selected Only</div>
+                  <div className="text-sm text-blue-100">Book only the specific slots you selected</div>
                 </button>
 
                 <button
                   onClick={() => setShowBookingOptions(false)}
-                  className="w-full p-2 text-gray-500 hover:text-gray-700 text-sm mt-2"
+                  className="w-full p-2 text-gray-500 hover:text-gray-800 text-sm mt-2 font-medium transition-colors"
                 >
                   Cancel
                 </button>
