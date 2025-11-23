@@ -9,7 +9,7 @@ export default function Navbar() {
   const pathname = usePathname();
 
   const commonLinks = [
-    { href: '/dashboard', label: 'Dashboard' },
+    { href: '/dashboard', label: 'Home' },
   ];
 
   const courtLinks = [
