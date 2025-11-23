@@ -1,8 +1,10 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import( RegisterPlayer, SportDetailListAPIView, SportViewSet,SportRegistrationViewSet, HouseViewSet, TeamViewSet,RegisterSportView,CreateBooking
+from .views import( RegisterPlayer, RejectDraftPick, SportDetailListAPIView, SportViewSet,SportRegistrationViewSet, HouseViewSet, TeamViewSet,RegisterSportView,CreateBooking
 ,AvailableSlots, CreateBooking, MyBookings, GetBooking, CalculateCost,PendingBookings,  AllBookings, UpdateBookingStatus, BulkBookCourt
-, TeamRegistrationCreateAPIView, TeamRegistrationListAPIView, ApproveTeamRegistrationAPIView, MatchViewSet,
+, TeamRegistrationCreateAPIView, TeamRegistrationListAPIView, ApproveTeamRegistrationAPIView, MatchViewSet,DraftPick,
+ProposeHouse,ApproveRejectHouse,ApproveRejectPlayer,DraftPoolBySport,PickPlayer,ApproveDraftPick,RejectDraftPick,GetLogSports,
+InitializeDraftSession,StartDraftSession,GetDraftSession,ListDraftSessions,RegisterForLogSport,GetAllPlayerRegistrations,
 OlympiadMatchCreateAPIView, OlympiadMatchListAPIView, OlympiadMatchDetailAPIView, OlympiadMatchEnterResultAPIView)
 
 from . import views
@@ -41,6 +43,29 @@ urlpatterns = [
     path('olympiad/match/<int:match_id>/', OlympiadMatchDetailAPIView.as_view(), name='olympiad-match-detail'),
     path('olympiad/match/<int:match_id>/result/', OlympiadMatchEnterResultAPIView.as_view(), name='olympiad-match-result'),
 
+    #LOG module
+     # House
+    path("log/sports/", GetLogSports.as_view()),
+    path("log/house/propose/", ProposeHouse.as_view()),
+    path("log/admin/house/<int:house_id>/decision/", ApproveRejectHouse.as_view()),
+
+    # Players
+    path("log/player/register/", RegisterForLogSport.as_view()),
+    path("log/admin/players/", GetAllPlayerRegistrations.as_view()),
+    path("log/admin/player/<int:reg_id>/decision/", ApproveRejectPlayer.as_view()),
+
+    # Draft
+    path("log/draft/sport/<int:sport_id>/", DraftPoolBySport.as_view()),
+    path("log/draft/pick/", PickPlayer.as_view()),
+
+    path("log/draft/<int:pick_id>/approve/", ApproveDraftPick.as_view()),
+    path("log/draft/<int:pick_id>/reject/", RejectDraftPick.as_view()),
+    
+    # Draft Session Management
+    path("log/draft/sessions/", ListDraftSessions.as_view()),
+    path("log/draft/session/<int:sport_id>/initialize/", InitializeDraftSession.as_view()),
+    path("log/draft/session/<int:sport_id>/start/", StartDraftSession.as_view()),
+    path("log/draft/session/<int:sport_id>/", GetDraftSession.as_view()),
 ]
 
 

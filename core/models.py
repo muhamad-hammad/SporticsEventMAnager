@@ -42,6 +42,17 @@ class House(models.Model):
     def __str__(self):
         return self.house_name
 
+# --------------------------------------------------
+# HOUSE CAPTAIN MODEL
+# --------------------------------------------------
+
+class HouseCaptain(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    house = models.ForeignKey(House, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.house.name}"
+
 
 # --------------------------------------------------
 # SPORT MODEL
@@ -51,6 +62,8 @@ class Sport(models.Model):
     sports_name = models.CharField(max_length=100, unique=True ,default="Unknown Sport")
     min_players = models.IntegerField(default=1)  # Add default if you have existing data
     max_players = models.IntegerField(default=11) # Add default if you have existing data
+    is_availableinLog = models.BooleanField(default=False)
+    is_availableinOlympiad = models.BooleanField(default=True)
     status = models.CharField(
         max_length=20,
         choices=[("General", "General"), ("Esports", "Esports"),("Sports", "Sports")],
@@ -81,6 +94,7 @@ class Player(models.Model):
 class PlayerSportRegistration(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     sport = models.ForeignKey(Sport, on_delete=models.CASCADE)
+    #house = models.ForeignKey(House, null=True, blank=True, on_delete=models.SET_NULL)
     approved_by_admin = models.BooleanField(default=False)
     remarks = models.TextField(null=True, blank=True)
 
@@ -90,6 +104,19 @@ class PlayerSportRegistration(models.Model):
     def __str__(self):
         return f"{self.player.user.username} → {self.sport.sports_name}"
 
+class PlayerRegistration(models.Model):
+    STATUS = (
+        ("pending", "Pending"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    )
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    sport = models.ForeignKey(Sport, on_delete=models.CASCADE)
+    status = models.CharField(max_length=10, choices=STATUS, default="pending")
+
+    def __str__(self):
+        return f"{self.user.username} - {self.sport.name}"
 
 # --------------------------------------------------
 # TEAM MODEL
@@ -294,3 +321,87 @@ class Match(models.Model):
             return f"{self.team1.team_name} vs {self.team2.team_name} ({self.round})"
         else:
             return f"{self.olympiad_team1.team_name} vs {self.olympiad_team2.team_name} ({self.round})"
+        
+
+
+
+
+
+# --------------------------------------------------
+# House Proposal Model
+## --------------------------------------------------
+class HouseProposal(models.Model):
+    house = models.OneToOneField(House, on_delete=models.CASCADE)
+    captain = models.ForeignKey(User, on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=[("pending","Pending"),("approved","Approved"),("rejected","Rejected")], default="pending")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.house.house_name} - {self.captain.username}"
+
+
+class SportCaptainDetail(models.Model):
+    """Store sport captain details for each sport in a house proposal"""
+    proposal = models.ForeignKey(HouseProposal, on_delete=models.CASCADE, related_name="sport_captains")
+    sport = models.ForeignKey(Sport, on_delete=models.CASCADE)
+    name = models.CharField(max_length=150)
+    roll_no = models.CharField(max_length=50)
+    email = models.EmailField()
+    
+    class Meta:
+        unique_together = ('proposal', 'sport')
+    
+    def __str__(self):
+        return f"{self.name} - {self.sport.sports_name} ({self.proposal.house.house_name})"
+
+
+
+class DraftPick(models.Model):
+    STATUS = (
+        ("pending", "Pending Approval"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    )
+
+    team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    player = models.ForeignKey(PlayerRegistration, on_delete=models.CASCADE)
+    picked_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    status = models.CharField(max_length=10, choices=STATUS, default="pending")
+    round_number = models.IntegerField(default=1)
+    pick_order = models.IntegerField(default=0)
+    picked_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        unique_together = ('team', 'player')
+
+    def __str__(self):
+        return f"{self.team} -> {self.player.user.username}"
+
+
+class DraftSession(models.Model):
+    """Manages the draft process for a specific sport"""
+    STATUS_CHOICES = (
+        ("not_started", "Not Started"),
+        ("in_progress", "In Progress"),
+        ("completed", "Completed"),
+    )
+    
+    sport = models.ForeignKey(Sport, on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="not_started")
+    current_round = models.IntegerField(default=1)
+    current_pick_index = models.IntegerField(default=0)  # Index in the house rotation
+    created_at = models.DateTimeField(auto_now_add=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        unique_together = ('sport',)
+    
+    def __str__(self):
+        return f"Draft Session - {self.sport.sports_name} ({self.status})"
+
+
+class Notification(models.Model):
+    to_admin = models.BooleanField(default=False)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)

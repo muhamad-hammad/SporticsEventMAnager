@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import (
-    Player,SportRegistration, User, OlympiadPlayer, Sport, PlayerSportRegistration,
-    Team, TeamPlayer, House, Courts, Booking, TeamRegistration, Match
+    DraftPick, Notification, Player, PlayerRegistration,SportRegistration, User, OlympiadPlayer, Sport, PlayerSportRegistration,
+    Team, TeamPlayer, House, Courts, Booking, TeamRegistration, Match, HouseProposal, SportCaptainDetail, DraftSession
 )
 from decimal import Decimal
 from datetime import datetime
@@ -323,3 +323,125 @@ class MatchSerializer(serializers.ModelSerializer):
                 )
             
         return data
+    
+
+
+
+
+
+
+
+
+class PlayerRegistrationSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    sport = SportSerializer(read_only=True)
+    
+    class Meta:
+        model = PlayerRegistration
+        fields = "__all__"
+
+
+
+
+class DraftPickSerializer(serializers.ModelSerializer):
+    team_name = serializers.CharField(source='team.team_name', read_only=True)
+    player_name = serializers.CharField(source='player.user.username', read_only=True)
+    picked_by_name = serializers.CharField(source='picked_by.username', read_only=True)
+    
+    class Meta:
+        model = DraftPick
+        fields = '__all__'
+
+
+class DraftSessionSerializer(serializers.ModelSerializer):
+    sport_name = serializers.CharField(source='sport.sports_name', read_only=True)
+    
+    class Meta:
+        model = DraftSession
+        fields = '__all__'
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = "__all__"
+
+
+class SportCaptainDetailSerializer(serializers.ModelSerializer):
+    sport_name = serializers.CharField(source='sport.sports_name', read_only=True)
+    
+    class Meta:
+        model = SportCaptainDetail
+        fields = ['id', 'sport', 'sport_name', 'name', 'roll_no', 'email']
+        read_only_fields = ['id']
+
+
+class HouseProposalSerializer(serializers.ModelSerializer):
+    house_name = serializers.CharField(write_only=True)
+    captain = UserSerializer(read_only=True)
+    sport_captains = SportCaptainDetailSerializer(many=True, read_only=True)
+    sport_captain_details = serializers.ListField(
+        child=serializers.DictField(),
+        write_only=True,
+        help_text="List of sport captain details with sport_id, name, roll_no, email"
+    )
+    house = HouseSerializer(read_only=True)
+
+    class Meta:
+        model = HouseProposal
+        fields = ['id', 'house', 'house_name', 'captain', 'sport_captains', 'sport_captain_details', 'status', 'created_at']
+        read_only_fields = ['captain', 'status', 'created_at']
+
+    def validate_sport_captain_details(self, value):
+        """Validate sport captain details"""
+        if not value or len(value) == 0:
+            raise serializers.ValidationError("At least one sport captain is required")
+        
+        sport_ids = []
+        for captain in value:
+            if 'sport_id' not in captain or 'name' not in captain or 'roll_no' not in captain or 'email' not in captain:
+                raise serializers.ValidationError("Each sport captain must have sport_id, name, roll_no, and email")
+            
+            # Check for duplicate sports
+            if captain['sport_id'] in sport_ids:
+                raise serializers.ValidationError(f"Duplicate sport captain for sport ID {captain['sport_id']}")
+            sport_ids.append(captain['sport_id'])
+            
+            # Validate sport exists and is available in LOG
+            try:
+                sport = Sport.objects.get(id=captain['sport_id'])
+                if not sport.is_availableinLog:
+                    raise serializers.ValidationError(f"Sport '{sport.sports_name}' is not available for LOG events")
+            except Sport.DoesNotExist:
+                raise serializers.ValidationError(f"Sport with ID {captain['sport_id']} does not exist")
+        
+        return value
+
+    def create(self, validated_data):
+        house_name = validated_data.pop('house_name')
+        sport_captain_details = validated_data.pop('sport_captain_details')
+        
+        # Create the house first with pending status
+        house = House.objects.create(
+            house_name=house_name,
+            status='pending'
+        )
+        
+        # Create the proposal
+        proposal = HouseProposal.objects.create(
+            house=house,
+            captain=self.context['request'].user,
+            **validated_data
+        )
+        
+        # Add sport captain details
+        for captain_data in sport_captain_details:
+            SportCaptainDetail.objects.create(
+                proposal=proposal,
+                sport_id=captain_data['sport_id'],
+                name=captain_data['name'],
+                roll_no=captain_data['roll_no'],
+                email=captain_data['email']
+            )
+        
+        return proposal

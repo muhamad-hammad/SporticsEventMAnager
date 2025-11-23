@@ -29,14 +29,23 @@ export default function Navbar() {
     { href: '/olympiad/register', label: 'Register' },
   ];
 
+  const logLinks = [
+    { href: '/log/register', label: 'Register' },
+    { href: '/log/drafts', label: 'Drafts' },
+    { href: '/log/events', label: 'Events' },
+  ];
+
   const isOlympiadPage = pathname?.startsWith('/olympiad');
   const isCourtsPage = pathname?.startsWith('/courts') || pathname?.startsWith('/bookings');
+  const isLogPage = pathname?.startsWith('/log');
 
   let currentLinks: { href: string; label: string }[] = [];
   if (isOlympiadPage) {
     currentLinks = olympiadLinks;
   } else if (isCourtsPage) {
     currentLinks = courtLinks;
+  } else if (isLogPage) {
+    currentLinks = logLinks;
   }
 
   return (
