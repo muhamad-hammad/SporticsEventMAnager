@@ -23,7 +23,10 @@ from .serializers import (
 )
 
 
-
+# Custom permission class for admin role
+class IsAdminRole(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role == 'admin'
 
 
 # Create your views here.
@@ -400,358 +403,24 @@ class TeamRegistrationCreateAPIView(APIView):
 
 
 class TeamRegistrationListAPIView(generics.ListAPIView):
-    """List all Olympiad teams"""
+    """List all Olympiad teams - Admin only"""
     serializer_class = TeamRegistrationSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAdminRole]
 
     def get_queryset(self):
-        return TeamRegistration.objects.select_related("sport", "sport_registration", "captain").prefetch_related("players")
+        return TeamRegistration.objects.select_related("sport", "captain").prefetch_related("players")
 
 
 class ApproveTeamRegistrationAPIView(APIView):
     """Admin approves Olympiad team"""
-    permission_classes = [permissions.IsAdminUser]
-
-    def post(self, request, team_id):
-        team = get_object_or_404(TeamRegistration, id=team_id)
-        team.approved = True
-        team.save()
-        try:
-            with transaction.atomic():
-                for booking_data in bookings_data:
-                    start_time = booking_data.get("start_time")
-                    end_time = booking_data.get("end_time")
-
-                    # Prepare data for serializer
-                    data = {
-                        "court": court.id,
-                        "date": date,
-                        "start_time": start_time,
-                        "end_time": end_time
-                    }
-
-                    serializer = BookingSerializer(data=data)
-                    if not serializer.is_valid():
-                        raise ValueError(str(serializer.errors))
-
-                    # Check overlap
-                    overlapping = Booking.objects.select_for_update().filter(
-                        court=court,
-                        date=date,
-                        status__in=['approved', 'pending'],
-                        start_time__lt=end_time,
-                        end_time__gt=start_time
-                    ).exists()
-
-                    if overlapping:
-                        raise ValueError(f"Time slot {start_time}-{end_time} is already booked.")
-
-                    # Create booking
-                    booking = serializer.save(user=request.user)
-                    created_bookings.append(booking)
-
-        except ValueError as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            return Response({"error": "An unexpected error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        return Response({
-            "message": f"{len(created_bookings)} bookings confirmed!",
-            "bookings": BookingSerializer(created_bookings, many=True).data
-        }, status=status.HTTP_201_CREATED)
-
-
-
-class MyBookings(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        user = request.user
-        bookings = Booking.objects.filter(user=user).order_by('-created_at')
-        data = BookingSerializer(bookings, many=True).data
-        return Response(data)
-
-
-class GetBooking(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, booking_id):
-        booking = get_object_or_404(Booking, id=booking_id)
-        # optional: only owner or staff can view
-        if booking.user != request.user and not request.user.is_staff:
-            return Response({"error": "Not allowed"}, status=status.HTTP_403_FORBIDDEN)
-        return Response(BookingSerializer(booking).data)
-
-
-class CalculateCost(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        """
-        POST /api/calculate-cost/
-        Body: { "court_id": int, "date": "YYYY-MM-DD", "start_time": "HH:MM", "end_time": "HH:MM" }
-        Returns estimated total cost (server side).
-        """
-        court_id = request.data.get("court_id")
-        date_str = request.data.get("date")
-        start_str = request.data.get("start_time")
-        end_str = request.data.get("end_time")
-        if not all([court_id, date_str, start_str, end_str]):
-            return Response({"error": "court_id, date, start_time and end_time are required"},
-                            status=status.HTTP_400_BAD_REQUEST)
-        try:
-            court = Courts.objects.get(id=court_id)
-        except Courts.DoesNotExist:
-            return Response({"error": "Court not found"}, status=404)
-        try:
-            date = datetime.strptime(date_str, "%Y-%m-%d").date()
-            start_time = datetime.strptime(start_str, "%H:%M").time()
-            end_time = datetime.strptime(end_str, "%H:%M").time()
-        except ValueError:
-            return Response({"error": "Invalid date/time format"}, status=400)
-
-        if end_time <= start_time:
-            return Response({"error": "end_time must be after start_time"}, status=400)
-
-        start_dt = datetime.combine(date, start_time)
-        end_dt = datetime.combine(date, end_time)
-        seconds = (end_dt - start_dt).total_seconds()
-        hours = Decimal(seconds) / Decimal(3600)
-        total_cost = (hours * court.hourly_rate).quantize(Decimal("0.01"))
-
-        return Response({
-            "court": court.court_name,
-            "hours": float(hours),
-            "hourly_rate": str(court.hourly_rate),
-            "total_cost": str(total_cost)
-        })
-    
-
-
-
-class PendingBookings(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        if request.user.role != 'admin':
-            return Response({"detail": "Not authorized"}, status=403)
-
-        bookings = Booking.objects.filter(status='pending')
-        serializer = BookingSerializer(bookings, many=True)
-        return Response(serializer.data)
-
-
-
-class AllBookings(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        if request.user.role != 'admin':
-            return Response({"detail": "Not authorized"}, status=403)
-
-        bookings = Booking.objects.all().order_by('-created_at')
-        serializer = BookingSerializer(bookings, many=True)
-        return Response(serializer.data)
-
-
-
-class UpdateBookingStatus(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, booking_id):
-        if request.user.role != 'admin':
-            return Response({"detail": "Not authorized"}, status=403)
-
-        status = request.data.get('status')
-        if status not in ['approved', 'rejected']:
-            return Response({"detail": "Invalid status"}, status=400)
-
-        try:
-            booking = Booking.objects.get(id=booking_id)
-        except Booking.DoesNotExist:
-            return Response({"detail": "Booking not found"}, status=404)
-
-        booking.status = status
-        booking.save()
-        return Response({"message": f"Booking {status}"})
-
-
-
-class SportRegistrationViewSet(viewsets.ModelViewSet):
-    queryset = SportRegistration.objects.all()
-    serializer_class = SportRegistrationSerializer
-    permission_classes = [IsAdminUser]  # only admin can set fees
-
-class TeamRegistrationCreateAPIView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    @transaction.atomic
-    def post(self, request):
-        serializer = TeamRegistrationSerializer(data=request.data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        team = serializer.save()
-        return Response(TeamRegistrationSerializer(team).data, status=201)
-
-
-class TeamRegistrationListAPIView(generics.ListAPIView):
-    """List all Olympiad teams"""
-    serializer_class = TeamRegistrationSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        return TeamRegistration.objects.select_related("sport", "sport_registration", "captain").prefetch_related("players")
-
-
-class ApproveTeamRegistrationAPIView(APIView):
-    """Admin approves Olympiad team"""
-    permission_classes = [permissions.IsAdminUser]
-
-    def post(self, request, team_id):
-        team = get_object_or_404(TeamRegistration, id=team_id)
-
-
-
-class MyBookings(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        user = request.user
-        bookings = Booking.objects.filter(user=user).order_by('-created_at')
-        data = BookingSerializer(bookings, many=True).data
-        return Response(data)
-
-
-class GetBooking(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, booking_id):
-        booking = get_object_or_404(Booking, id=booking_id)
-        # optional: only owner or staff can view
-        if booking.user != request.user and not request.user.is_staff:
-            return Response({"error": "Not allowed"}, status=status.HTTP_403_FORBIDDEN)
-        return Response(BookingSerializer(booking).data)
-
-
-class CalculateCost(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        """
-        POST /api/calculate-cost/
-        Body: { "court_id": int, "date": "YYYY-MM-DD", "start_time": "HH:MM", "end_time": "HH:MM" }
-        Returns estimated total cost (server side).
-        """
-        court_id = request.data.get("court_id")
-        date_str = request.data.get("date")
-        start_str = request.data.get("start_time")
-        end_str = request.data.get("end_time")
-        if not all([court_id, date_str, start_str, end_str]):
-            return Response({"error": "court_id, date, start_time and end_time are required"},
-                            status=status.HTTP_400_BAD_REQUEST)
-        try:
-            court = Courts.objects.get(id=court_id)
-        except Courts.DoesNotExist:
-            return Response({"error": "Court not found"}, status=404)
-        try:
-            date = datetime.strptime(date_str, "%Y-%m-%d").date()
-            start_time = datetime.strptime(start_str, "%H:%M").time()
-            end_time = datetime.strptime(end_str, "%H:%M").time()
-        except ValueError:
-            return Response({"error": "Invalid date/time format"}, status=400)
-
-        if end_time <= start_time:
-            return Response({"error": "end_time must be after start_time"}, status=400)
-
-        start_dt = datetime.combine(date, start_time)
-        end_dt = datetime.combine(date, end_time)
-        seconds = (end_dt - start_dt).total_seconds()
-        hours = Decimal(seconds) / Decimal(3600)
-        total_cost = (hours * court.hourly_rate).quantize(Decimal("0.01"))
-
-        return Response({
-            "court": court.court_name,
-            "hours": float(hours),
-            "hourly_rate": str(court.hourly_rate),
-            "total_cost": str(total_cost)
-        })
-    
-
-
-class PendingBookings(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        if request.user.role != 'admin':
-            return Response({"detail": "Not authorized"}, status=403)
-
-        bookings = Booking.objects.filter(status='pending')
-        serializer = BookingSerializer(bookings, many=True)
-        return Response(serializer.data)
-
-
-
-class AllBookings(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        if request.user.role != 'admin':
-            return Response({"detail": "Not authorized"}, status=403)
-
-        bookings = Booking.objects.all().order_by('-created_at')
-
-    def post(self, request, booking_id):
-        if request.user.role != 'admin':
-            return Response({"detail": "Not authorized"}, status=403)
-
-        status = request.data.get('status')
-        if status not in ['approved', 'rejected']:
-            return Response({"detail": "Invalid status"}, status=400)
-
-        try:
-            booking = Booking.objects.get(id=booking_id)
-        except Booking.DoesNotExist:
-            return Response({"detail": "Booking not found"}, status=404)
-
-        booking.status = status
-        booking.save()
-        return Response({"message": f"Booking {status}"})
-
-
-
-class SportRegistrationViewSet(viewsets.ModelViewSet):
-    queryset = SportRegistration.objects.all()
-    serializer_class = SportRegistrationSerializer
-    permission_classes = [IsAdminUser]  # only admin can set fees
-
-class TeamRegistrationCreateAPIView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    @transaction.atomic
-    def post(self, request):
-        serializer = TeamRegistrationSerializer(data=request.data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        team = serializer.save()
-        return Response(TeamRegistrationSerializer(team).data, status=201)
-
-
-class TeamRegistrationListAPIView(generics.ListAPIView):
-    """List all Olympiad teams"""
-    serializer_class = TeamRegistrationSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        return TeamRegistration.objects.select_related("sport", "sport_registration", "captain").prefetch_related("players")
-
-
-class ApproveTeamRegistrationAPIView(APIView):
-    """Admin approves Olympiad team"""
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsAdminRole]
 
     def post(self, request, team_id):
         team = get_object_or_404(TeamRegistration, id=team_id)
         team.approved = True
         team.save()
         return Response({"detail": "Team registration approved"})
+
 
 class SportDetailListAPIView(generics.ListAPIView):
     queryset = Sport.objects.all()
@@ -873,40 +542,9 @@ class UpdateBookingStatus(APIView):
 
 
 
-class SportRegistrationViewSet(viewsets.ModelViewSet):
     queryset = SportRegistration.objects.all()
     serializer_class = SportRegistrationSerializer
     permission_classes = [IsAdminUser]  # only admin can set fees
-
-class TeamRegistrationCreateAPIView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    @transaction.atomic
-    def post(self, request):
-        serializer = TeamRegistrationSerializer(data=request.data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        team = serializer.save()
-        return Response(TeamRegistrationSerializer(team).data, status=201)
-
-
-class TeamRegistrationListAPIView(generics.ListAPIView):
-    """List all Olympiad teams"""
-    serializer_class = TeamRegistrationSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        return TeamRegistration.objects.select_related("sport", "sport_registration", "captain").prefetch_related("players")
-
-
-class ApproveTeamRegistrationAPIView(APIView):
-    """Admin approves Olympiad team"""
-    permission_classes = [permissions.IsAdminUser]
-
-    def post(self, request, team_id):
-        team = get_object_or_404(TeamRegistration, id=team_id)
-        team.approved = True
-        team.save()
-        return Response({"detail": "Team registration approved"})
 
 class IsAdminRole(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -940,9 +578,9 @@ class MatchViewSet(viewsets.ModelViewSet):
             if winner_id:
                 match.winner_id = winner_id
         else:  # OLYMPIAD
-            olympiad_winner_id = request.data.get("olympiad_winner_id")
-            if olympiad_winner_id:
-                match.olympiad_winner_id = olympiad_winner_id
+            olympiad_match_winner_id = request.data.get("olympiad_match_winner_id")
+            if olympiad_match_winner_id:
+                match.olympiad_match_winner_id = olympiad_match_winner_id
         
         match.save()
         return Response(MatchSerializer(match).data)
@@ -953,8 +591,24 @@ class OlympiadMatchCreateAPIView(APIView):
     permission_classes = [IsAdminRole]
 
     def post(self, request):
+        from datetime import datetime as dt
+        
         data = request.data.copy()
         data['event_type'] = 'OLYMPIAD'  # Force OLYMPIAD type
+        
+        # Handle date/time - check if they're separate or already combined
+        if 'time' in data and data['time'] and 'date' in data:
+            # If separate date and time fields are provided
+            try:
+                date_str = data.get('date')
+                time_str = data.get('time')
+                # Combine date and time into datetime
+                datetime_str = f"{date_str} {time_str}"
+                data['date'] = datetime_str
+                # Remove the separate time field
+                data.pop('time', None)
+            except Exception as e:
+                return Response({"error": f"Invalid date/time format: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
         
         serializer = MatchSerializer(data=data)
         if serializer.is_valid():
@@ -970,7 +624,7 @@ class OlympiadMatchListAPIView(generics.ListAPIView):
     
     def get_queryset(self):
         return Match.objects.filter(event_type='OLYMPIAD').select_related(
-            'sport', 'olympiad_team1', 'olympiad_team2', 'olympiad_winner'
+            'sport', 'olympiad_team1', 'olympiad_team2', 'olympiad_match_winner'
         ).order_by('-date')
 
 
@@ -1012,21 +666,21 @@ class OlympiadMatchEnterResultAPIView(APIView):
         
         score_team1 = request.data.get("score_team1")
         score_team2 = request.data.get("score_team2")
-        olympiad_winner_id = request.data.get("olympiad_winner_id")
+        olympiad_match_winner_id = request.data.get("olympiad_match_winner_id")
         notes = request.data.get("notes", "")
         
         if score_team1 is not None:
             match.score_team1 = score_team1
         if score_team2 is not None:
             match.score_team2 = score_team2
-        if olympiad_winner_id:
+        if olympiad_match_winner_id:
             # Validate winner is one of the teams
-            if olympiad_winner_id not in [match.olympiad_team1.id, match.olympiad_team2.id]:
+            if olympiad_match_winner_id not in [match.olympiad_team1.id, match.olympiad_team2.id]:
                 return Response(
                     {"error": "Winner must be one of the competing teams"}, 
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            match.olympiad_winner_id = olympiad_winner_id
+            match.olympiad_match_winner_id = olympiad_match_winner_id
         
         match.notes = notes
         match.status = "completed"

@@ -96,8 +96,7 @@ class PlayerSportRegistration(models.Model):
 # --------------------------------------------------
 class Team(models.Model):
     EVENT_CHOICES = [
-        ("LOG", "LOG"),
-        ("OLYMPIAD", "OLYMPIAD"),
+        ("LOG", "LOG")
     ]
 
     team_name = models.CharField(max_length=100)
@@ -206,11 +205,11 @@ class SportRegistration(models.Model):
 
 class TeamRegistration(models.Model):
     sport = models.ForeignKey(Sport, on_delete=models.CASCADE)
-    sport_registration = models.ForeignKey(SportRegistration, on_delete=models.SET_NULL, null=True)
+    #sport_registration = models.ForeignKey(SportRegistration, on_delete=models.SET_NULL, null=True)
 
     team_name = models.CharField(max_length=150)
     captain = models.ForeignKey(User, on_delete=models.CASCADE)
-    total_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    #total_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     approved = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -237,9 +236,13 @@ class OlympiadPlayer(models.Model):
 
 
 
+
+
 #   Matches
 class Match(models.Model):
     ROUND_CHOICES = (
+        ("knockout", "Knockout"),
+        ("round_robin", "Round Robin"),
         ("quarter_final", "Quarter Final"),
         ("semi_final", "Semi Final"),
         ("final", "Final"),
@@ -250,7 +253,7 @@ class Match(models.Model):
     )
     
     sport = models.ForeignKey(Sport, on_delete=models.CASCADE)
-    event_type = models.CharField(max_length=20, choices=EVENT_TYPE_CHOICES, default="LOG")
+    event_type = models.CharField(max_length=20, choices=EVENT_TYPE_CHOICES, default="OLYMPIAD")
     
     # For LOG teams
     team1 = models.ForeignKey(Team, related_name='team1_matches', on_delete=models.CASCADE, null=True, blank=True)
@@ -260,9 +263,11 @@ class Match(models.Model):
     # For Olympiad teams
     olympiad_team1 = models.ForeignKey(TeamRegistration, related_name='olympiad_team1_matches', on_delete=models.CASCADE, null=True, blank=True)
     olympiad_team2 = models.ForeignKey(TeamRegistration, related_name='olympiad_team2_matches', on_delete=models.CASCADE, null=True, blank=True)
-    olympiad_winner = models.ForeignKey(TeamRegistration, related_name='olympiad_won_matches', on_delete=models.SET_NULL, null=True, blank=True)
+    olympiad_match_winner = models.ForeignKey(TeamRegistration, related_name='olympiad_won_matches', on_delete=models.SET_NULL, null=True, blank=True)
     
     date = models.DateTimeField()
+    time = models.TimeField(null=True, blank=True)  # Optional time field
+    location = models.CharField(max_length=200, blank=True, null=True)
     round = models.CharField(max_length=50, choices=ROUND_CHOICES)
     status = models.CharField(max_length=20, default="scheduled")  # scheduled / completed
     score_team1 = models.IntegerField(null=True, blank=True)

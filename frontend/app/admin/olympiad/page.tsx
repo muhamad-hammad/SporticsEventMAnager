@@ -36,6 +36,7 @@ export default function AdminOlympiadPage() {
     const fetchTeams = async () => {
         try {
             const response = await api.get('/api/olympiad/teams/');
+            
             // In a real app, you might want a specific admin endpoint that returns ALL teams including rejected ones,
             // but for now we'll use the list endpoint and filter client-side if needed.
             // Assuming the list endpoint returns all teams.

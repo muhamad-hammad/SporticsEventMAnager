@@ -84,6 +84,14 @@ export default function AdminDashboard() {
                 <p className="text-gray-600">Approve team registrations</p>
               </div>
             </a>
+
+            <a href="/admin/olympiad/matches" className="bg-white rounded-lg shadow-md p-6 hover:shadow-xl transition-shadow duration-300 flex items-center space-x-4">
+              <div className="text-4xl">⚽</div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">Manage Matches</h3>
+                <p className="text-gray-600">Schedule & Update Results</p>
+              </div>
+            </a>
           </div>
         </section>
 
