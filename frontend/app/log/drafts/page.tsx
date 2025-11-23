@@ -5,12 +5,6 @@ import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
-interface Sport {
-    id: number;
-    sport_name: string;
-    max_players: number;
-}
-
 interface DraftSession {
     id: number;
     sport: number;
@@ -31,13 +25,6 @@ export default function DraftsListPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    useEffect(() => {
-        fetchDrafts();
-        // Auto-refresh every 5 seconds
-        const interval = setInterval(fetchDrafts, 5000);
-        return () => clearInterval(interval);
-    }, []);
-
     const fetchDrafts = async () => {
         try {
             const response = await api.get('/api/log/draft/sessions/');
@@ -49,6 +36,13 @@ export default function DraftsListPage() {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        fetchDrafts();
+        // Auto-refresh every 5 seconds
+        const interval = setInterval(fetchDrafts, 5000);
+        return () => clearInterval(interval);
+    }, []);
 
     const getStatusBadge = (status: string) => {
         switch (status) {
@@ -223,11 +217,11 @@ export default function DraftsListPage() {
                         <ul className="space-y-2 text-sm text-blue-800">
                             <li className="flex items-start gap-2">
                                 <span className="text-blue-600 mt-0.5">•</span>
-                                <span>House captains take turns picking players for their teams</span>
+                                <span>Captains take turns picking players for their team&apos;s roster</span>
                             </li>
                             <li className="flex items-start gap-2">
                                 <span className="text-blue-600 mt-0.5">•</span>
-                                <span>You'll be notified when it's your turn to pick</span>
+                                <span>You&apos;ll be notified when it&apos;s your turn to pick</span>
                             </li>
                             <li className="flex items-start gap-2">
                                 <span className="text-blue-600 mt-0.5">•</span>

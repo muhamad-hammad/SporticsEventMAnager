@@ -20,7 +20,6 @@ interface PlayerRegistration {
 }
 
 export default function LogPlayerRegisterPage() {
-    const router = useRouter();
     const [sports, setSports] = useState<Sport[]>([]);
     const [registrations, setRegistrations] = useState<PlayerRegistration[]>([]);
     const [loading, setLoading] = useState(true);
@@ -49,7 +48,7 @@ export default function LogPlayerRegisterPage() {
         }
     };
 
-    const handleRegister = async (sportId: number, sportName: string) => {
+    const handleRegister = async (sportId: number) => {
         setError('');
         setSuccess('');
         setProcessingId(sportId);
@@ -202,7 +201,7 @@ export default function LogPlayerRegisterPage() {
 
                                             {!isRegistered ? (
                                                 <button
-                                                    onClick={() => handleRegister(sport.id, sport.sports_name)}
+                                                    onClick={() => handleRegister(sport.id)}
                                                     disabled={processingId === sport.id}
                                                     className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
                                                 >
@@ -210,7 +209,7 @@ export default function LogPlayerRegisterPage() {
                                                 </button>
                                             ) : registration.status === 'approved' ? (
                                                 <div className="w-full px-4 py-2 bg-green-50 border-2 border-green-500 text-green-800 rounded-lg text-center font-medium">
-                                                    ✓ You're Registered
+                                                    ✓ You&apos;re Registered
                                                 </div>
                                             ) : registration.status === 'pending' ? (
                                                 <div className="w-full px-4 py-2 bg-yellow-50 border-2 border-yellow-500 text-yellow-800 rounded-lg text-center font-medium">
@@ -222,7 +221,7 @@ export default function LogPlayerRegisterPage() {
                                                         ✗ Registration Rejected
                                                     </div>
                                                     <button
-                                                        onClick={() => handleRegister(sport.id, sport.sports_name)}
+                                                        onClick={() => handleRegister(sport.id)}
                                                         disabled={processingId === sport.id}
                                                         className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium text-sm"
                                                     >
@@ -251,7 +250,7 @@ export default function LogPlayerRegisterPage() {
                             </li>
                             <li className="flex items-start gap-2">
                                 <span className="text-blue-600 mt-0.5">•</span>
-                                <span>Once approved, you'll be eligible for the draft</span>
+                                <span>Once approved, you&apos;ll be eligible for the draft</span>
                             </li>
                             <li className="flex items-start gap-2">
                                 <span className="text-blue-600 mt-0.5">•</span>

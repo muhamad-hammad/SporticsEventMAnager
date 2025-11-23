@@ -48,6 +48,7 @@ export default function SportsPage() {
         await api.delete(`/api/sports/${id}/`);
         fetchSports();
       } catch (error) {
+        console.error('Failed to delete sport:', error);
         alert('Failed to delete sport');
       }
     }

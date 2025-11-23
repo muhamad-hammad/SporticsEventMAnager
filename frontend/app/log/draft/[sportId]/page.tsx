@@ -70,17 +70,6 @@ export default function CaptainDraftPage() {
     const [success, setSuccess] = useState('');
     const [autoRefresh, setAutoRefresh] = useState(true);
 
-    useEffect(() => {
-        fetchDraftData();
-    }, [sportId]);
-
-    useEffect(() => {
-        if (autoRefresh && session?.status === 'in_progress') {
-            const interval = setInterval(fetchDraftData, 3000); // Refresh every 3 seconds
-            return () => clearInterval(interval);
-        }
-    }, [autoRefresh, session]);
-
     const fetchDraftData = async () => {
         try {
             const response = await api.get(`/api/log/draft/session/${sportId}/`);
@@ -98,6 +87,17 @@ export default function CaptainDraftPage() {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        fetchDraftData();
+    }, [sportId]);
+
+    useEffect(() => {
+        if (autoRefresh && session?.status === 'in_progress') {
+            const interval = setInterval(fetchDraftData, 3000); // Refresh every 3 seconds
+            return () => clearInterval(interval);
+        }
+    }, [autoRefresh, session]);
 
     const handlePickPlayer = async () => {
         if (!selectedPlayer) {
@@ -170,7 +170,7 @@ export default function CaptainDraftPage() {
                 <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                     <div className="text-center">
                         <h2 className="text-2xl font-bold text-gray-900 mb-2">Draft Not Started</h2>
-                        <p className="text-gray-500 mb-4">The draft for {session.sport_name} hasn't started yet.</p>
+                        <p className="text-gray-500 mb-4">The draft for {session.sport_name} hasn&apos;t started yet.</p>
                         <p className="text-sm text-gray-400">Please wait for the admin to start the draft session.</p>
                         <button
                             onClick={() => router.push('/log/events')}

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
@@ -41,7 +40,6 @@ interface HouseProposal {
 }
 
 export default function AdminHouseProposalsPage() {
-    const router = useRouter();
     const [proposals, setProposals] = useState<HouseProposal[]>([]);
     const [filteredProposals, setFilteredProposals] = useState<HouseProposal[]>([]);
     const [loading, setLoading] = useState(true);

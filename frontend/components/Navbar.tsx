@@ -18,11 +18,6 @@ export default function Navbar() {
     { href: '/bookings', label: 'View Bookings' },
   ];
 
-  const adminLinks = [
-    { href: '/admin/dashboard', label: 'Admin Panel' },
-    { href: '/admin/bookings', label: 'All Bookings' },
-  ];
-
   const olympiadLinks = [
     { href: '/olympiad/sports', label: 'Sports' },
     { href: '/olympiad/teams', label: 'Teams' },

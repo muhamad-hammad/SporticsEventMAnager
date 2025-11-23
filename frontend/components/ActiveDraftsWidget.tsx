@@ -20,13 +20,6 @@ export default function ActiveDraftsWidget() {
     const [drafts, setDrafts] = useState<DraftSession[]>([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchActiveDrafts();
-        // Auto-refresh every 10 seconds
-        const interval = setInterval(fetchActiveDrafts, 10000);
-        return () => clearInterval(interval);
-    }, []);
-
     const fetchActiveDrafts = async () => {
         try {
             const response = await api.get('/api/log/draft/sessions/');
@@ -41,6 +34,13 @@ export default function ActiveDraftsWidget() {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        fetchActiveDrafts();
+        // Auto-refresh every 10 seconds
+        const interval = setInterval(fetchActiveDrafts, 10000);
+        return () => clearInterval(interval);
+    }, []);
 
     if (loading || drafts.length === 0) {
         return null;

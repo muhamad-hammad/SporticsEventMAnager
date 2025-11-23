@@ -63,12 +63,28 @@ export default function DraftSessionPage() {
     const [picks, setPicks] = useState<DraftPick[]>([]);
     const [availablePlayers, setAvailablePlayers] = useState<PlayerRegistration[]>([]);
     const [canPick, setCanPick] = useState(false);
-    const [isCaptain, setIsCaptain] = useState(false);
     const [selectedPlayer, setSelectedPlayer] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [autoRefresh, setAutoRefresh] = useState(true);
+
+    const fetchDraftData = async () => {
+        try {
+            const response = await api.get(`/api/log/draft/session/${sportId}/`);
+            setSession(response.data.session);
+            setTeams(response.data.teams);
+            setCurrentTeam(response.data.current_team);
+            setPicks(response.data.picks);
+            setAvailablePlayers(response.data.available_players);
+            setCanPick(response.data.can_pick);
+            setLoading(false);
+        } catch (err: any) {
+            console.error('Failed to fetch draft data', err);
+            setError(err.response?.data?.error || 'Failed to load draft session');
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         fetchDraftData();
@@ -80,24 +96,6 @@ export default function DraftSessionPage() {
             return () => clearInterval(interval);
         }
     }, [autoRefresh, session]);
-
-    const fetchDraftData = async () => {
-        try {
-            const response = await api.get(`/api/log/draft/session/${sportId}/`);
-            setSession(response.data.session);
-            setTeams(response.data.teams);
-            setCurrentTeam(response.data.current_team);
-            setPicks(response.data.picks);
-            setAvailablePlayers(response.data.available_players);
-            setCanPick(response.data.can_pick);
-            setIsCaptain(response.data.is_captain);
-            setLoading(false);
-        } catch (err: any) {
-            console.error('Failed to fetch draft data', err);
-            setError(err.response?.data?.error || 'Failed to load draft session');
-            setLoading(false);
-        }
-    };
 
     const handlePickPlayer = async () => {
         if (!selectedPlayer) {

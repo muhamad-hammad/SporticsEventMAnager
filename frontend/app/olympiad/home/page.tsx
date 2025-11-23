@@ -44,7 +44,7 @@ export default function OlympiadHomePage() {
                             With a wide range of competitions, participants have the chance to demonstrate their skills, teamwork, and passion for sports. More than just a competition, FAST Olympiad celebrates the spirit of unity, excellence, and the vibrant energy of youth.
                         </p>
                         <p className="text-lg text-gray-700 leading-relaxed">
-                            Whether you're an athlete ready to compete, a gaming enthusiast looking for thrills, or a supporter cheering from the sidelines, FAST Olympiad offers something for everyone. Join us for this unforgettable experience and be part of a community that thrives on passion and sportsmanship.
+                            Whether you&apos;re an athlete ready to compete, a gaming enthusiast looking for thrills, or a supporter cheering from the sidelines, FAST Olympiad offers something for everyone. Join us for this unforgettable experience and be part of a community that thrives on passion and sportsmanship.
                         </p>
                     </div>
                 </div>

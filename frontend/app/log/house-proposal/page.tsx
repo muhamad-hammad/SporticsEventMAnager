@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
@@ -56,7 +55,6 @@ interface SportCaptainInput {
 }
 
 export default function HouseProposalPage() {
-    const router = useRouter();
     const [sports, setSports] = useState<Sport[]>([]);
     const [proposals, setProposals] = useState<HouseProposal[]>([]);
     const [houseName, setHouseName] = useState('');
@@ -140,7 +138,7 @@ export default function HouseProposalPage() {
         setLoading(true);
 
         try {
-            const response = await api.post('/api/log/house/propose/', {
+            await api.post('/api/log/house/propose/', {
                 house_name: houseName,
                 sport_captain_details: filledCaptains
             });
@@ -365,7 +363,7 @@ export default function HouseProposalPage() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                 </svg>
                                 <p className="mt-4 text-gray-500">No house proposals yet</p>
-                                <p className="text-sm text-gray-400">Click "New House Proposal" to get started</p>
+                                <p className="text-sm text-gray-400">Click &quot;New House Proposal&quot; to get started</p>
                             </div>
                         ) : (
                             <div className="divide-y divide-gray-200">
