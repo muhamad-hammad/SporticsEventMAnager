@@ -28,7 +28,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(false);
         return;
       }
-      
+
       const token = localStorage.getItem('access_token');
       if (token) {
         try {
@@ -45,27 +45,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initAuth();
   }, []);
-/*
-  const login = async (data: LoginData) => {
-    try {
-      const response = await api.post<TokenResponse>('/auth/jwt/create/', data);
-      const { access, refresh } = response.data;
-      
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('access_token', access);
-        localStorage.setItem('refresh_token', refresh);
+  /*
+    const login = async (data: LoginData) => {
+      try {
+        const response = await api.post<TokenResponse>('/auth/jwt/create/', data);
+        const { access, refresh } = response.data;
+        
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('access_token', access);
+          localStorage.setItem('refresh_token', refresh);
+        }
+  
+        const userResponse = await api.get<User>('/auth/users/me/');
+        setUser(userResponse.data);
+        
+        router.push('/dashboard');
+      } catch (error) {
+        console.error('Login failed:', error);
+        throw error;
       }
-
-      const userResponse = await api.get<User>('/auth/users/me/');
-      setUser(userResponse.data);
-      
-      router.push('/dashboard');
-    } catch (error) {
-      console.error('Login failed:', error);
-      throw error;
-    }
-  };
-*/
+    };
+  */
   const register = async (data: RegisterData) => {
     try {
       await api.post('/auth/users/', data);
@@ -77,39 +77,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-const login = async (data: LoginData) => {
-  try {
-    // 1. Get tokens
-    const response = await api.post<TokenResponse>('/auth/jwt/create/', data);
-    const { access, refresh } = response.data;
+  const login = async (data: LoginData) => {
+    try {
+      // 1. Get tokens
+      const response = await api.post<TokenResponse>('/auth/jwt/create/', data);
+      const { access, refresh } = response.data;
 
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('access_token', access);
-      localStorage.setItem('refresh_token', refresh);
-    }
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('access_token', access);
+        localStorage.setItem('refresh_token', refresh);
+      }
 
-    // 2. Fetch current user (backend should include role)
-    const userResponse = await api.get<User>('/auth/users/me/');
-    const userData = userResponse.data;
+      // 2. Fetch current user (backend should include role)
+      const userResponse = await api.get<User>('/auth/users/me/');
+      const userData = userResponse.data;
 
-    // 3. Store user in state and localStorage (role included)
-    setUser(userData);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('user', JSON.stringify(userData));
-    }
+      // 3. Store user in state and localStorage (role included)
+      setUser(userData);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('user', JSON.stringify(userData));
+      }
 
-    // 4. Redirect based on role
-    if (userData.role === 'admin') {
-      router.push('/admin/dashboard');
-    } else {
+      // 4. Redirect to main dashboard for everyone
       router.push('/dashboard');
-    }
 
-  } catch (error) {
-    console.error('Login failed:', error);
-    throw error;
-  }
-};
+    } catch (error) {
+      console.error('Login failed:', error);
+      throw error;
+    }
+  };
 
   const logout = () => {
     if (typeof window !== 'undefined') {

@@ -1,87 +1,30 @@
 'use client';
 
-import { useEffect, useState } from "react";
-import api from "@/lib/api";
 import AdminRoute from "@/components/AdminRoute";
 
-interface Booking {
-    id: number;
-    user: { username: string };
-    court_details: { court_name: string };
-    date: string;
-    start_time: string;
-    end_time: string;
-    total_cost: string;
-    status: string;
-}
-
-export default function AdminAllBookings() {
-    const [allBookings, setAllBookings] = useState<Booking[]>([]);
-    const [loadingData, setLoadingData] = useState(true);
-    const [error, setError] = useState<string>("");
-
-    useEffect(() => {
-        fetchData();
-    }, []);
-
-    const fetchData = async () => {
-        try {
-            setError("");
-            const response = await api.get<Booking[]>("/api/admin/bookings/all/");
-            setAllBookings(response.data);
-        } catch (err: any) {
-            console.error(err);
-            setError(err.response?.data?.detail || "Failed to load bookings");
-        } finally {
-            setLoadingData(false);
-        }
-    };
-
-    const statusColors: Record<string, string> = {
-        approved: "text-green-600",
-        pending: "text-yellow-600",
-        rejected: "text-red-600",
-    };
-
-    if (loadingData) return <p>Loading...</p>;
-
+export default function BookingAdminDashboard() {
     return (
         <AdminRoute>
-            <div className="p-6">
-                <h1 className="text-3xl font-bold mb-4">All Bookings</h1>
+            <div className="p-8 max-w-7xl mx-auto">
+                <h1 className="text-4xl font-bold mb-8 text-gray-800">Bookings Admin Panel</h1>
 
-                {error && (
-                    <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-                        {error}
-                    </div>
-                )}
+                <div className="grid md:grid-cols-2 gap-8">
+                    <a href="/admin/bookings/manage" className="bg-white rounded-xl shadow-lg p-10 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 flex items-center space-x-6 border border-gray-100">
+                        <div className="text-6xl bg-yellow-50 p-4 rounded-full">📝</div>
+                        <div>
+                            <h3 className="text-3xl font-bold text-gray-900 mb-2">Manage Bookings</h3>
+                            <p className="text-lg text-gray-600">Review and approve pending requests</p>
+                        </div>
+                    </a>
 
-                <table className="w-full border-collapse border border-gray-300">
-                    <thead>
-                        <tr className="bg-gray-200">
-                            <th className="border px-2 py-1">User</th>
-                            <th className="border px-2 py-1">Court</th>
-                            <th className="border px-2 py-1">Date</th>
-                            <th className="border px-2 py-1">Time</th>
-                            <th className="border px-2 py-1">Total Cost</th>
-                            <th className="border px-2 py-1">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {allBookings.map((b) => (
-                            <tr key={b.id} className="border">
-                                <td className="border px-2 py-1">{b.user.username}</td>
-                                <td className="border px-2 py-1">{b.court_details.court_name}</td>
-                                <td className="border px-2 py-1">{b.date}</td>
-                                <td className="border px-2 py-1">{b.start_time} - {b.end_time}</td>
-                                <td className="border px-2 py-1">{b.total_cost}</td>
-                                <td className={`border px-2 py-1 ${statusColors[b.status] || ''}`}>
-                                    {b.status}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                    <a href="/admin/bookings/history" className="bg-white rounded-xl shadow-lg p-10 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 flex items-center space-x-6 border border-gray-100">
+                        <div className="text-6xl bg-purple-50 p-4 rounded-full">📚</div>
+                        <div>
+                            <h3 className="text-3xl font-bold text-gray-900 mb-2">All Bookings</h3>
+                            <p className="text-lg text-gray-600">View complete booking history</p>
+                        </div>
+                    </a>
+                </div>
             </div>
         </AdminRoute>
     );

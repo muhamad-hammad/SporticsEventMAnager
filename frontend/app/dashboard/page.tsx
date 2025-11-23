@@ -8,9 +8,27 @@ export default function DashboardPage() {
   const { user } = useAuth();
 
   const features = [
-    { id: 'olympiad', title: 'Olympiad', description: 'Register your team now!', href: '/olympiad/register', icon: '🏅' },
-    { id: 'league', title: 'League of Glory', description: 'Coming soon...', href: '#', icon: '⚔️' },
-    { id: 'booking', title: 'Book a Court', description: 'View courts info and book slots', href: '/courts-info', icon: '🎾' },
+    {
+      id: 'olympiad',
+      title: 'Olympiad',
+      description: user?.role === 'admin' ? 'Manage teams and matches' : 'Register your team now!',
+      href: user?.role === 'admin' ? '/admin/olympiad' : '/olympiad/register',
+      icon: '🏅'
+    },
+    {
+      id: 'league',
+      title: 'League of Glory',
+      description: 'Coming soon...',
+      href: '#',
+      icon: '⚔️'
+    },
+    {
+      id: 'booking',
+      title: 'Book a Court',
+      description: user?.role === 'admin' ? 'Manage court bookings' : 'View courts info and book slots',
+      href: user?.role === 'admin' ? '/admin/bookings' : '/courts-info',
+      icon: '🎾'
+    },
   ];
 
   return (
