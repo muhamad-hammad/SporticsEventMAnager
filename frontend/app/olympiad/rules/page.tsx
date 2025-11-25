@@ -100,23 +100,6 @@ export default function RulesPage() {
                     <div className="grid md:grid-cols-3 gap-8 mb-8">
                         <div>
                             <h3 className="font-bold text-lg mb-4">Contact Us</h3>
-                            <p className="text-gray-600">(+92) 315-1173672</p>
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-lg mb-4">About the Developers</h3>
-                            <ul className="text-gray-600 space-y-1">
-                                <li>Owais Rafiq</li>
-                                <li>Ahad Aziz</li>
-                                <li>Hunain Imran</li>
-                                <li>Sameer Ahmed</li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-lg mb-4">Repository</h3>
-                            <a href="#" className="text-blue-600 hover:underline flex items-center">
-                                <span>Star on GitHub</span>
-                                <span className="ml-2 bg-gray-100 px-2 py-0.5 rounded text-xs text-gray-600">6</span>
-                            </a>
                         </div>
                     </div>
                     <div className="text-center text-gray-500 text-sm">

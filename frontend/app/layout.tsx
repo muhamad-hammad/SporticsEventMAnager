@@ -25,13 +25,16 @@ export default function RootLayout({
   const isOlympiadRoute = pathname?.startsWith('/olympiad');
   const isCourtsRoute = pathname?.startsWith('/courts');
 
+  const isLogRoute = pathname?.startsWith('/log');
+  const isAdminRoute = pathname?.startsWith('/admin');
+
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          {!isOlympiadRoute && !isCourtsRoute && <Navbar />}
+          {!isOlympiadRoute && !isCourtsRoute && !isLogRoute && !isAdminRoute && <Navbar />}
           <main className="min-h-screen bg-gray-50">
             {children}
           </main>

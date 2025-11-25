@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import AdminRoute from '@/components/AdminRoute';
+import AdminNavbar from '@/components/AdminNavbar';
 
 interface Player {
     name: string;
@@ -68,6 +69,7 @@ export default function AdminOlympiadTeamsPage() {
 
     return (
         <AdminRoute>
+            <AdminNavbar />
             <div className="container mx-auto px-4 py-8">
                 <h1 className="text-3xl font-bold text-gray-900 mb-8">Manage Teams</h1>
 

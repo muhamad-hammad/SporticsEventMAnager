@@ -25,7 +25,7 @@ export default function Navbar() {
 
   const logLinks = [
     { href: '/log/register', label: 'Register' },
-    { href: '/log/drafts', label: 'Drafts' },
+    ...(user?.role === 'captain' ? [{ href: '/log/drafts', label: 'Drafts' }] : []),
     { href: '/log/events', label: 'Events' },
   ];
 

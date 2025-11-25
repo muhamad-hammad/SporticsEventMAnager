@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import api from "@/lib/api";
 import AdminRoute from "@/components/AdminRoute";
+import AdminNavbar from "@/components/AdminNavbar";
 
 interface Booking {
     id: number;
@@ -47,6 +48,7 @@ export default function AllBookingsPage() {
 
     return (
         <AdminRoute>
+            <AdminNavbar />
             <div className="p-6">
                 <h1 className="text-3xl font-bold mb-8">Booking History</h1>
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import AdminRoute from '@/components/AdminRoute';
+import AdminNavbar from '@/components/AdminNavbar';
 
 interface Sport {
     id: number;
@@ -112,7 +113,7 @@ export default function MatchManagementPage() {
                 round
             };
             */
-           const payload = {
+            const payload = {
                 sport_id: selectedSport,
                 olympiad_team1: team1,
                 olympiad_team2: team2,
@@ -137,9 +138,9 @@ export default function MatchManagementPage() {
             alert('Match scheduled successfully!');
         } catch (err: any) {
             console.error(err);
-            const errorMsg = err.response?.data?.error 
-                || err.response?.data?.detail 
-                || JSON.stringify(err.response?.data) 
+            const errorMsg = err.response?.data?.error
+                || err.response?.data?.detail
+                || JSON.stringify(err.response?.data)
                 || 'Failed to create match';
             alert(errorMsg);
         } finally {
@@ -184,6 +185,7 @@ export default function MatchManagementPage() {
 
     return (
         <AdminRoute>
+            <AdminNavbar />
             <div className="container mx-auto px-4 py-8">
                 <h1 className="text-3xl font-bold text-gray-900 mb-8">Match Management</h1>
 
