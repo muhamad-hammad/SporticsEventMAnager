@@ -9,6 +9,7 @@ interface User {
     id: number;
     username: string;
     email: string;
+    first_name: string;
 }
 
 interface PlayerRegistration {
@@ -262,12 +263,12 @@ export default function CaptainDraftPage() {
                     )}
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Available Players - Only show if it's captain's turn */}
-                        {session.status === 'in_progress' && canPick && (
+                        {/* Available Players - Always show during draft */}
+                        {session.status === 'in_progress' && (
                             <div className="lg:col-span-1">
                                 <div className="bg-white rounded-lg shadow-md p-6 sticky top-6">
                                     <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                                        Select a Player ({availablePlayers.length} available)
+                                        {canPick ? 'Select a Player' : 'Available Players'} ({availablePlayers.length})
                                     </h3>
                                     <div className="max-h-96 overflow-y-auto space-y-2 mb-4">
                                         {availablePlayers.length === 0 ? (
@@ -276,7 +277,9 @@ export default function CaptainDraftPage() {
                                             availablePlayers.map((player) => (
                                                 <label
                                                     key={player.id}
-                                                    className={`block p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                                                    className={`block p-3 border-2 rounded-lg transition-all ${
+                                                        !canPick ? 'cursor-default opacity-60' : 'cursor-pointer'
+                                                    } ${
                                                         selectedPlayer === player.id
                                                             ? 'border-blue-500 bg-blue-50 shadow-md'
                                                             : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
@@ -287,13 +290,15 @@ export default function CaptainDraftPage() {
                                                         name="player"
                                                         value={player.id}
                                                         checked={selectedPlayer === player.id}
-                                                        onChange={() => setSelectedPlayer(player.id)}
+                                                        onChange={() => canPick && setSelectedPlayer(player.id)}
+                                                        disabled={!canPick}
                                                         className="sr-only"
                                                     />
                                                     <div className="flex items-center justify-between">
                                                         <div>
-                                                            <p className="font-medium text-gray-900">{player.user.username}</p>
-                                                            <p className="text-sm text-gray-600">{player.user.email}</p>
+                                                            <p className="font-medium text-gray-900">{player.user.first_name}</p>
+                                                            <p className="text-sm text-gray-600">{player.user.username}</p>
+                                                            <p className="text-xs text-gray-500">{player.user.email}</p>
                                                         </div>
                                                         {selectedPlayer === player.id && (
                                                             <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
@@ -317,7 +322,7 @@ export default function CaptainDraftPage() {
                         )}
 
                         {/* Teams and their picks */}
-                        <div className={canPick && session.status === 'in_progress' ? 'lg:col-span-2' : 'lg:col-span-3'}>
+                        <div className={session.status === 'in_progress' ? 'lg:col-span-2' : 'lg:col-span-3'}>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {teams.map((team) => {
                                     const teamPicks = getTeamPicks(team.id);

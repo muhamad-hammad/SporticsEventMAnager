@@ -26,10 +26,24 @@ export default function LogPlayerRegisterPage() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [processingId, setProcessingId] = useState<number | null>(null);
+    const [settings, setSettings] = useState<{
+        player_registration_open: boolean;
+        registration_finalized: boolean;
+    } | null>(null);
 
     useEffect(() => {
         fetchData();
+        fetchSettings();
     }, []);
+
+    const fetchSettings = async () => {
+        try {
+            const response = await api.get('/api/log/settings/');
+            setSettings(response.data);
+        } catch (err) {
+            console.error('Failed to fetch settings', err);
+        }
+    };
 
     const fetchData = async () => {
         try {
@@ -128,6 +142,35 @@ export default function LogPlayerRegisterPage() {
                         </div>
                     )}
 
+                    {/* Lock Messages */}
+                    {settings?.registration_finalized && (
+                        <div className="mb-6 p-6 bg-gray-100 border-2 border-gray-300 rounded-lg">
+                            <div className="flex items-center gap-3">
+                                <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                                <div>
+                                    <h3 className="text-lg font-semibold text-gray-900">Player Registration Has Been Finalized</h3>
+                                    <p className="text-gray-700">New player registrations are no longer being accepted. Registration has been finalized by the admin.</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {settings && !settings.registration_finalized && !settings.player_registration_open && (
+                        <div className="mb-6 p-6 bg-yellow-50 border-2 border-yellow-300 rounded-lg">
+                            <div className="flex items-center gap-3">
+                                <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <div>
+                                    <h3 className="text-lg font-semibold text-yellow-900">Player Registration Currently Closed</h3>
+                                    <p className="text-yellow-800">Player registration is temporarily closed. Please wait for the admin to open it.</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* My Registrations Summary */}
                     {registrations.length > 0 && (
                         <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-6">
@@ -202,10 +245,17 @@ export default function LogPlayerRegisterPage() {
                                             {!isRegistered ? (
                                                 <button
                                                     onClick={() => handleRegister(sport.id)}
-                                                    disabled={processingId === sport.id}
+                                                    disabled={
+                                                        processingId === sport.id || 
+                                                        settings?.registration_finalized || 
+                                                        !settings?.player_registration_open
+                                                    }
                                                     className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
                                                 >
-                                                    {processingId === sport.id ? 'Registering...' : 'Register'}
+                                                    {processingId === sport.id ? 'Registering...' : 
+                                                     settings?.registration_finalized ? 'Registration Closed' :
+                                                     !settings?.player_registration_open ? 'Registration Closed' :
+                                                     'Register'}
                                                 </button>
                                             ) : registration.status === 'approved' ? (
                                                 <div className="w-full px-4 py-2 bg-green-50 border-2 border-green-500 text-green-800 rounded-lg text-center font-medium">

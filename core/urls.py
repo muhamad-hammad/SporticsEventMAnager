@@ -5,7 +5,8 @@ from .views import( RegisterPlayer, RejectDraftPick, SportDetailListAPIView, Spo
 , TeamRegistrationCreateAPIView, TeamRegistrationListAPIView, ApproveTeamRegistrationAPIView, MatchViewSet,DraftPick,
 ProposeHouse,ApproveRejectHouse,ApproveRejectPlayer,DraftPoolBySport,PickPlayer,ApproveDraftPick,RejectDraftPick,GetLogSports,
 InitializeDraftSession,StartDraftSession,GetDraftSession,ListDraftSessions,RegisterForLogSport,GetAllPlayerRegistrations,
-OlympiadMatchCreateAPIView, OlympiadMatchListAPIView, OlympiadMatchDetailAPIView, OlympiadMatchEnterResultAPIView)
+OlympiadMatchCreateAPIView, OlympiadMatchListAPIView, OlympiadMatchDetailAPIView, OlympiadMatchEnterResultAPIView, MyTeamsView,
+GetLogModuleSettings, UpdateLogModuleSettings, ToggleHouseProposals, TogglePlayerRegistration, FinalizeHouses, FinalizeRegistration)
 
 from . import views
 
@@ -66,7 +67,41 @@ urlpatterns = [
     path("log/draft/session/<int:sport_id>/initialize/", InitializeDraftSession.as_view()),
     path("log/draft/session/<int:sport_id>/start/", StartDraftSession.as_view()),
     path("log/draft/session/<int:sport_id>/", GetDraftSession.as_view()),
+    
+    # My Teams
+    path("log/my-teams/", MyTeamsView.as_view()),
+    
+    # LOG Module Settings & Admin Controls
+    path("log/settings/", GetLogModuleSettings.as_view()),
+    path("log/admin/settings/", UpdateLogModuleSettings.as_view()),
+    path("log/admin/toggle-house-proposals/", ToggleHouseProposals.as_view()),
+    path("log/admin/toggle-player-registration/", TogglePlayerRegistration.as_view()),
+    path("log/admin/finalize-houses/", FinalizeHouses.as_view()),
+    path("log/admin/finalize-registration/", FinalizeRegistration.as_view()),
+    
+    # Match Management (Admin)
+    path("log/admin/matches/create/", views.create_log_match),
+    path("log/admin/matches/", views.list_log_matches),
+    path("log/admin/matches/<int:match_id>/", views.update_log_match),
+    path("log/admin/matches/<int:match_id>/result/", views.update_match_result),
+    path("log/admin/matches/<int:match_id>/delete/", views.delete_log_match),
+    
+    # Match & Leaderboard (User)
+    path("log/schedule/", views.get_match_schedule),
+    path("log/results/", views.get_match_results),
+    path("log/leaderboard/", views.get_leaderboard),
+    path("log/leaderboard/<int:sport_id>/", views.get_leaderboard_by_sport),
+    
+    # LOG Conclusion
+    path("log/admin/conclude/", views.conclude_log),
+    path("log/conclusion/", views.get_log_conclusion),
+    path("log/sport-winners/", views.get_sport_winners),
+    path("log/admin/sport-winners/<int:sport_id>/", views.set_sport_winner),
 ]
+
+
+
+
 
 
 

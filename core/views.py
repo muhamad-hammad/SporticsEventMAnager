@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated,AllowAny
 from django.db import transaction
+from django.db import models
 from datetime import datetime, time, timedelta
 from decimal import Decimal
 from django.shortcuts import get_object_or_404
@@ -13,14 +14,14 @@ from rest_framework import generics
 from rest_framework.decorators import action
 from .models import (
     DraftPick, Notification, Player, PlayerRegistration, Sport, PlayerSportRegistration, SportRegistration,
-    Team, House, Courts, Booking, TeamRegistration, Match, HouseProposal, HouseCaptain, User, SportCaptainDetail, DraftSession
+    Team, House, Courts, Booking, TeamRegistration, Match, HouseProposal, HouseCaptain, User, SportCaptainDetail, DraftSession, LogModuleSettings, LogMatch, LogLeaderboard, LogSportWinner, LogConclusion
 )
 from .serializers import (
     PlayerRegistrationSerializer, PlayerSerializer, SportSerializer,
     PlayerSportRegistrationSerializer, TeamSerializer,
     HouseSerializer, CourtSerializer, BookingSerializer, TeamRegistrationSerializer, MatchSerializer
     ,AvailableSlotSerializer,UserSerializer,SportRegistrationSerializer, SportDetailSerializer, HouseProposalSerializer,
-    DraftSessionSerializer, DraftPickSerializer
+    DraftSessionSerializer, DraftPickSerializer, LogModuleSettingsSerializer, LogMatchSerializer, LogLeaderboardSerializer, LogSportWinnerSerializer, LogConclusionSerializer
 )
 
 
@@ -617,6 +618,19 @@ class ProposeHouse(APIView):
             ]
         }
         """
+        # Check if house proposals are allowed
+        settings = LogModuleSettings.get_settings()
+        
+        if settings.houses_finalized:
+            return Response({
+                "error": "Houses have been finalized. No more proposals are accepted."
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        if not settings.house_proposals_open:
+            return Response({
+                "error": "House proposals are currently closed. Please wait for admin to open them."
+            }, status=status.HTTP_403_FORBIDDEN)
+        
         serializer = HouseProposalSerializer(data=request.data, context={'request': request})
 
         if serializer.is_valid():
@@ -729,6 +743,19 @@ class RegisterForLogSport(APIView):
     permission_classes = [permissions.IsAuthenticated]
     
     def post(self, request):
+        # Check if player registration is allowed
+        settings = LogModuleSettings.get_settings()
+        
+        if settings.registration_finalized:
+            return Response({
+                "error": "Player registration has been finalized. No more registrations are accepted."
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        if not settings.player_registration_open:
+            return Response({
+                "error": "Player registration is currently closed. Please wait for admin to open it."
+            }, status=status.HTTP_403_FORBIDDEN)
+        
         sport_id = request.data.get('sport_id')
         
         if not sport_id:
@@ -835,43 +862,54 @@ class StartDraftSession(APIView):
     
     def post(self, request, sport_id):
         try:
-            session = DraftSession.objects.get(sport_id=sport_id)
+            with transaction.atomic():
+                # Lock the session to prevent concurrent starts
+                session = DraftSession.objects.select_for_update().get(sport_id=sport_id)
+                
+                if session.status != 'not_started':
+                    return Response({"error": f"Draft session is already {session.status}"}, status=400)
+                
+                # Check if there are teams and players
+                teams_count = Team.objects.filter(sport_id=sport_id, event_type='LOG').count()
+                players_count = PlayerRegistration.objects.filter(sport_id=sport_id, status='approved').count()
+                
+                if teams_count == 0:
+                    return Response({"error": "No teams found for this sport"}, status=400)
+                
+                if players_count == 0:
+                    return Response({"error": "No approved players found for this sport"}, status=400)
+                
+                from django.utils import timezone
+                session.status = 'in_progress'
+                session.started_at = timezone.now()
+                session.current_round = 1
+                session.current_pick_index = 0
+                session.save()
+                
+                return Response({
+                    "msg": "Draft session started",
+                    "session": DraftSessionSerializer(session).data,
+                    "teams_count": teams_count,
+                    "players_count": players_count
+                })
         except DraftSession.DoesNotExist:
             return Response({"error": "Draft session not found. Initialize first."}, status=404)
-        
-        if session.status != 'not_started':
-            return Response({"error": f"Draft session is already {session.status}"}, status=400)
-        
-        # Check if there are teams and players
-        teams_count = Team.objects.filter(sport_id=sport_id, event_type='LOG').count()
-        players_count = PlayerRegistration.objects.filter(sport_id=sport_id, status='approved').count()
-        
-        if teams_count == 0:
-            return Response({"error": "No teams found for this sport"}, status=400)
-        
-        if players_count == 0:
-            return Response({"error": "No approved players found for this sport"}, status=400)
-        
-        from django.utils import timezone
-        session.status = 'in_progress'
-        session.started_at = timezone.now()
-        session.current_round = 1
-        session.current_pick_index = 0
-        session.save()
-        
-        return Response({
-            "msg": "Draft session started",
-            "session": DraftSessionSerializer(session).data,
-            "teams_count": teams_count,
-            "players_count": players_count
-        })
 
 
 class GetDraftSession(APIView):
-    """Get draft session details"""
+    """Get draft session details - restricted to house captains and admins"""
     permission_classes = [permissions.IsAuthenticated]
     
     def get(self, request, sport_id):
+        # Check if user is admin or house captain
+        is_admin = request.user.role == 'admin'
+        is_house_captain = HouseCaptain.objects.filter(user=request.user).exists()
+        
+        if not is_admin and not is_house_captain:
+            return Response({
+                "error": "Access denied. Only house captains and admins can access the draft."
+            }, status=status.HTTP_403_FORBIDDEN)
+        
         try:
             session = DraftSession.objects.get(sport_id=sport_id)
         except DraftSession.DoesNotExist:
@@ -902,6 +940,11 @@ class GetDraftSession(APIView):
             status='approved'
         ).exclude(id__in=drafted_player_ids).select_related('user')
         
+        # Check if user is house captain and if it's their turn
+        can_pick = False
+        if current_team and hasattr(request.user, 'housecaptain'):
+            can_pick = request.user.housecaptain.house == current_team.house
+        
         return Response({
             "session": DraftSessionSerializer(session).data,
             "teams": TeamSerializer(teams, many=True).data,
@@ -909,7 +952,7 @@ class GetDraftSession(APIView):
             "picks": DraftPickSerializer(picks, many=True).data,
             "available_players": PlayerRegistrationSerializer(available_players, many=True).data,
             "is_captain": request.user.role == 'captain',
-            "can_pick": current_team and current_team.captain == request.user if current_team else False
+            "can_pick": can_pick
         })
 
 
@@ -923,20 +966,24 @@ class ListDraftSessions(APIView):
         results = []
         for session in sessions:
             # Get teams for this sport
-            teams = Team.objects.filter(sport_id=session.sport_id, event_type='LOG').select_related('captain')
+            teams = Team.objects.filter(sport_id=session.sport_id, event_type='LOG').select_related('house')
             teams_list = list(teams)
             
-            # Check if current user is a captain for this sport
-            is_captain = any(team.captain == request.user for team in teams_list)
+            # Check if current user is a house captain
+            is_house_captain = hasattr(request.user, 'housecaptain')
+            user_house = request.user.housecaptain.house if is_house_captain else None
+            
+            # Check if user's house has a team in this sport
+            can_participate = is_house_captain and any(team.house == user_house for team in teams_list)
             
             # Check if it's user's turn
             your_turn = False
-            if session.status == 'in_progress' and teams_list:
+            if session.status == 'in_progress' and teams_list and is_house_captain:
                 current_team = teams_list[session.current_pick_index % len(teams_list)]
-                your_turn = current_team.captain == request.user
+                your_turn = current_team.house == user_house
             
             session_data = DraftSessionSerializer(session).data
-            session_data['can_participate'] = is_captain
+            session_data['can_participate'] = can_participate
             session_data['your_turn'] = your_turn
             
             results.append(session_data)
@@ -963,9 +1010,19 @@ class DraftPoolBySport(APIView):
 
 
 class PickPlayer(APIView):
+    """Pick a player during draft - restricted to house captains and admins"""
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
+        # Check if user is admin or house captain
+        is_admin = request.user.role == 'admin'
+        is_house_captain = HouseCaptain.objects.filter(user=request.user).exists()
+        
+        if not is_admin and not is_house_captain:
+            return Response({
+                "error": "Access denied. Only house captains and admins can pick players."
+            }, status=status.HTTP_403_FORBIDDEN)
+        
         player_id = request.data.get("player_id")
         sport_id = request.data.get("sport_id")
         captain = request.user
@@ -973,96 +1030,111 @@ class PickPlayer(APIView):
         if not player_id or not sport_id:
             return Response({"error": "player_id and sport_id are required"}, status=400)
 
-        # Check draft session
+        # Wrap entire operation in atomic transaction with database locking
         try:
-            session = DraftSession.objects.get(sport_id=sport_id)
+            with transaction.atomic():
+                # Lock the draft session row to prevent concurrent modifications
+                session = DraftSession.objects.select_for_update().get(sport_id=sport_id)
+                
+                if session.status != 'in_progress':
+                    return Response({"error": f"Draft session is {session.status}, cannot pick players"}, status=400)
+
+                # Verify user is a house captain
+                try:
+                    house_captain = captain.housecaptain
+                except:
+                    return Response({"error": "You are not a house captain"}, status=403)
+                
+                # Get the team for this house captain and sport
+                try:
+                    team = Team.objects.get(house=house_captain.house, sport_id=sport_id, event_type='LOG')
+                except Team.DoesNotExist:
+                    return Response({"error": "No team found for your house and this sport"}, status=404)
+                
+                # Check if it's this house captain's turn
+                teams = list(Team.objects.filter(sport_id=sport_id, event_type='LOG').order_by('id'))
+                if not teams:
+                    return Response({"error": "No teams found"}, status=404)
+                
+                current_team = teams[session.current_pick_index % len(teams)]
+                if current_team.house != house_captain.house:
+                    return Response({"error": "It's not your house's turn to pick"}, status=403)
+
+                # Lock the player row to prevent double-drafting
+                try:
+                    player = PlayerRegistration.objects.select_for_update().get(id=player_id)
+                except PlayerRegistration.DoesNotExist:
+                    return Response({"error": "Player not found"}, status=404)
+
+                # Check player already drafted (with lock held)
+                if DraftPick.objects.filter(player=player, status="approved").exists():
+                    return Response({"error": "Player already drafted"}, status=400)
+
+                # Count current approved players
+                count = DraftPick.objects.filter(team=team, status="approved").count()
+                if count >= team.sport.max_players:
+                    return Response({"error": "Max players reached"}, status=400)
+
+                # Create draft pick
+                pick = DraftPick.objects.create(
+                    team=team,
+                    player=player,
+                    picked_by=captain,
+                    status="approved",  # Auto-approve during live draft
+                    round_number=session.current_round,
+                    pick_order=session.current_pick_index
+                )
+
+                # Update session to next pick
+                session.current_pick_index += 1
+                
+                # Check if round is complete
+                if session.current_pick_index >= len(teams) * session.current_round:
+                    session.current_round += 1
+                
+                # Check if draft is complete (all teams full)
+                all_full = all(
+                    DraftPick.objects.filter(team=t, status="approved").count() >= t.sport.max_players
+                    for t in teams
+                )
+                
+                if all_full:
+                    session.status = 'completed'
+                    session.completed_at = datetime.now()
+                
+                session.save()
+
+                return Response({
+                    "msg": "Player picked successfully",
+                    "pick": DraftPickSerializer(pick).data,
+                    "session": DraftSessionSerializer(session).data
+                })
+                
         except DraftSession.DoesNotExist:
             return Response({"error": "Draft session not found"}, status=404)
-        
-        if session.status != 'in_progress':
-            return Response({"error": f"Draft session is {session.status}, cannot pick players"}, status=400)
-
-        # Get captain's team
-        try:
-            team = Team.objects.get(house__housecaptain__user=captain, sport_id=sport_id)
-        except Team.DoesNotExist:
-            return Response({"error": "No team found for this captain and sport"}, status=404)
-        
-        # Check if it's this captain's turn
-        teams = list(Team.objects.filter(sport_id=sport_id, event_type='LOG').order_by('id'))
-        if not teams:
-            return Response({"error": "No teams found"}, status=404)
-        
-        current_team = teams[session.current_pick_index % len(teams)]
-        if current_team.id != team.id:
-            return Response({"error": "It's not your turn to pick"}, status=403)
-
-        try:
-            player = PlayerRegistration.objects.get(id=player_id)
-        except PlayerRegistration.DoesNotExist:
-            return Response({"error": "Player not found"}, status=404)
-
-        # Check player already drafted
-        if DraftPick.objects.filter(player=player, status="approved").exists():
-            return Response({"error": "Player already drafted"}, status=400)
-
-        # Count current approved players
-        count = DraftPick.objects.filter(team=team, status="approved").count()
-        if count >= team.sport.max_players:
-            return Response({"error": "Max players reached"}, status=400)
-
-        # Create draft pick
-        pick = DraftPick.objects.create(
-            team=team,
-            player=player,
-            picked_by=captain,
-            status="approved",  # Auto-approve during live draft
-            round_number=session.current_round,
-            pick_order=session.current_pick_index
-        )
-
-        # Update session to next pick
-        session.current_pick_index += 1
-        
-        # Check if round is complete
-        if session.current_pick_index >= len(teams) * session.current_round:
-            session.current_round += 1
-        
-        # Check if draft is complete (all teams full)
-        all_full = all(
-            DraftPick.objects.filter(team=t, status="approved").count() >= t.sport.max_players
-            for t in teams
-        )
-        
-        if all_full:
-            session.status = 'completed'
-            session.completed_at = datetime.now()
-        
-        session.save()
-
-        return Response({
-            "msg": "Player picked successfully",
-            "pick": DraftPickSerializer(pick).data,
-            "session": DraftSessionSerializer(session).data
-        })
 
 
 class ApproveDraftPick(APIView):
     permission_classes = [permissions.IsAdminUser]
 
     def post(self, request, pick_id):
-        pick = DraftPick.objects.get(id=pick_id)
-        team = pick.team
+        try:
+            with transaction.atomic():
+                # Lock the pick to prevent concurrent approvals
+                pick = DraftPick.objects.select_for_update().get(id=pick_id)
+                team = pick.team
 
-        # Apply logic again for safety
-        approved_count = DraftPick.objects.filter(team=team, status="approved").count()
-        if approved_count >= team.sport.max_players:
-            return Response({"error": "Team is already full"}, status=400)
+                # Apply logic again for safety
+                approved_count = DraftPick.objects.filter(team=team, status="approved").count()
+                if approved_count >= team.sport.max_players:
+                    return Response({"error": "Team is already full"}, status=400)
 
-        pick.status = "approved"
-        pick.save()
+                pick.status = "approved"
+                pick.save()
 
-        return Response({"msg": "Draft pick approved"})
+                return Response({"msg": "Draft pick approved"})
+        except DraftPick.DoesNotExist:
+            return Response({"error": "Draft pick not found"}, status=404)
 
 
 class RejectDraftPick(APIView):
@@ -1073,3 +1145,648 @@ class RejectDraftPick(APIView):
         pick.status = "rejected"
         pick.save()
         return Response({"msg": "Draft pick rejected"})
+
+
+class MyTeamsView(APIView):
+    """
+    Get teams for the logged-in user:
+    - House Captain: All teams for their house
+    - Player: Teams where they have been picked (approved draft picks)
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        # Check if user is a house captain
+        try:
+            house_captain = HouseCaptain.objects.get(user=user)
+            # Return all teams for this house
+            teams = Team.objects.filter(house=house_captain.house).select_related('sport', 'house', 'captain')
+            
+            teams_data = []
+            for team in teams:
+                # Get all approved picks for this team
+                picks = DraftPick.objects.filter(
+                    team=team, 
+                    status='approved'
+                ).select_related('player__user').order_by('round_number', 'pick_order')
+                
+                players = []
+                for pick in picks:
+                    players.append({
+                        'id': pick.player.user.id,
+                        'first_name': pick.player.user.first_name,
+                        'username': pick.player.user.username,
+                        'email': pick.player.user.email,
+                        'round': pick.round_number,
+                        'pick_order': pick.pick_order
+                    })
+                
+                teams_data.append({
+                    'id': team.id,
+                    'team_name': team.team_name,
+                    'sport': {
+                        'id': team.sport.id,
+                        'sport_name': team.sport.sports_name
+                    },
+                    'house': {
+                        'id': team.house.id,
+                        'house_name': team.house.house_name
+                    },
+                    'captain': {
+                        'id': team.captain.id,
+                        'username': team.captain.username,
+                        'first_name': team.captain.first_name
+                    } if team.captain else None,
+                    'players': players,
+                    'player_count': len(players),
+                    'max_players': team.sport.max_players
+                })
+            
+            return Response({
+                'role': 'house_captain',
+                'house_name': house_captain.house.house_name,
+                'teams': teams_data
+            })
+        except HouseCaptain.DoesNotExist:
+            # User is a regular player - get teams where they've been picked
+            picks = DraftPick.objects.filter(
+                player__user=user,
+                status='approved'
+            ).select_related('team__sport', 'team__house', 'team__captain')
+            
+            teams_data = []
+            for pick in picks:
+                team = pick.team
+                
+                # Get all players in this team
+                team_picks = DraftPick.objects.filter(
+                    team=team,
+                    status='approved'
+                ).select_related('player__user').order_by('round_number', 'pick_order')
+                
+                players = []
+                for p in team_picks:
+                    players.append({
+                        'id': p.player.user.id,
+                        'first_name': p.player.user.first_name,
+                        'username': p.player.user.username,
+                        'email': p.player.user.email,
+                        'round': p.round_number,
+                        'pick_order': p.pick_order,
+                        'is_me': p.player.user.id == user.id
+                    })
+                
+                teams_data.append({
+                    'id': team.id,
+                    'team_name': team.team_name,
+                    'sport': {
+                        'id': team.sport.id,
+                        'sport_name': team.sport.sports_name
+                    },
+                    'house': {
+                        'id': team.house.id,
+                        'house_name': team.house.house_name
+                    },
+                    'captain': {
+                        'id': team.captain.id,
+                        'username': team.captain.username,
+                        'first_name': team.captain.first_name
+                    } if team.captain else None,
+                    'players': players,
+                    'player_count': len(players),
+                    'max_players': team.sport.max_players,
+                    'picked_in_round': pick.round_number,
+                    'picked_at': pick.picked_at
+                })
+            
+            return Response({
+                'role': 'player',
+                'teams': teams_data
+            })
+
+
+# ======================================================
+# LOG MODULE SETTINGS & ADMIN CONTROLS
+# ======================================================
+
+class GetLogModuleSettings(APIView):
+    """Get current LOG module settings - accessible to all authenticated users"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        settings = LogModuleSettings.get_settings()
+        serializer = LogModuleSettingsSerializer(settings)
+        return Response(serializer.data)
+
+
+class UpdateLogModuleSettings(APIView):
+    """Update LOG module settings - admin only"""
+    permission_classes = [IsAdminUser]
+    
+    def patch(self, request):
+        settings = LogModuleSettings.get_settings()
+        serializer = LogModuleSettingsSerializer(settings, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+            serializer.save(updated_by=request.user)
+            return Response({
+                'msg': 'Settings updated successfully',
+                'settings': serializer.data
+            })
+        return Response(serializer.errors, status=400)
+
+
+class ToggleHouseProposals(APIView):
+    """Toggle house proposals on/off - admin only"""
+    permission_classes = [IsAdminUser]
+    
+    def post(self, request):
+        settings = LogModuleSettings.get_settings()
+        settings.house_proposals_open = not settings.house_proposals_open
+        settings.updated_by = request.user
+        settings.save()
+        
+        return Response({
+            'msg': f"House proposals {'opened' if settings.house_proposals_open else 'closed'}",
+            'house_proposals_open': settings.house_proposals_open
+        })
+
+
+class TogglePlayerRegistration(APIView):
+    """Toggle player registration on/off - admin only"""
+    permission_classes = [IsAdminUser]
+    
+    def post(self, request):
+        settings = LogModuleSettings.get_settings()
+        settings.player_registration_open = not settings.player_registration_open
+        settings.updated_by = request.user
+        settings.save()
+        
+        return Response({
+            'msg': f"Player registration {'opened' if settings.player_registration_open else 'closed'}",
+            'player_registration_open': settings.player_registration_open
+        })
+
+
+class FinalizeHouses(APIView):
+    """Finalize houses - prevents any more proposals - admin only"""
+    permission_classes = [IsAdminUser]
+    
+    def post(self, request):
+        settings = LogModuleSettings.get_settings()
+        
+        if settings.houses_finalized:
+            return Response({
+                'error': 'Houses are already finalized'
+            }, status=400)
+        
+        settings.houses_finalized = True
+        settings.house_proposals_open = False  # Auto-close proposals
+        settings.updated_by = request.user
+        settings.save()
+        
+        return Response({
+            'msg': 'Houses have been finalized. No more proposals will be accepted.',
+            'houses_finalized': True
+        })
+
+
+class FinalizeRegistration(APIView):
+    """Finalize player registration - prevents any more registrations - admin only"""
+    permission_classes = [IsAdminUser]
+    
+    def post(self, request):
+        settings = LogModuleSettings.get_settings()
+        
+        if settings.registration_finalized:
+            return Response({
+                'error': 'Player registration is already finalized'
+            }, status=400)
+        
+        settings.registration_finalized = True
+        settings.player_registration_open = False  # Auto-close registration
+        settings.updated_by = request.user
+        settings.save()
+        
+        return Response({
+            'msg': 'Player registration has been finalized. No more registrations will be accepted.',
+            'registration_finalized': True
+        })
+
+
+# ======================
+# Match & Leaderboard APIs (Admin)
+# ======================
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def create_log_match(request):
+    """
+    Admin endpoint to create a new LOG match.
+    Requires houses to be finalized.
+    """
+    try:
+        settings = LogModuleSettings.get_settings()
+        if not settings.houses_finalized:
+            return Response({
+                'error': 'Houses must be finalized before creating matches'
+            }, status=400)
+        
+        serializer = LogMatchSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def list_log_matches(request):
+    """
+    Admin endpoint to list all LOG matches with optional filters.
+    Query params: sport, house, status
+    """
+    try:
+        matches = LogMatch.objects.all()
+        
+        # Filter by sport
+        sport_id = request.query_params.get('sport')
+        if sport_id:
+            matches = matches.filter(sport_id=sport_id)
+        
+        # Filter by house (either house_a or house_b)
+        house_id = request.query_params.get('house')
+        if house_id:
+            matches = matches.filter(
+                models.Q(house_a_id=house_id) | models.Q(house_b_id=house_id)
+            )
+        
+        # Filter by status
+        status = request.query_params.get('status')
+        if status:
+            matches = matches.filter(status=status)
+        
+        matches = matches.order_by('scheduled_date', 'created_at')
+        serializer = LogMatchSerializer(matches, many=True)
+        return Response(serializer.data)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
+
+@api_view(['PUT', 'PATCH'])
+@permission_classes([IsAdminUser])
+def update_log_match(request, match_id):
+    """
+    Admin endpoint to update match details (venue, date, status).
+    Cannot change teams or sport after creation.
+    """
+    try:
+        match = LogMatch.objects.get(id=match_id)
+        
+        # Prevent changing core match details
+        if 'sport' in request.data or 'team1' in request.data or 'team2' in request.data:
+            return Response({
+                'error': 'Cannot change sport or teams after match creation'
+            }, status=400)
+        
+        serializer = LogMatchSerializer(match, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+    except LogMatch.DoesNotExist:
+        return Response({'error': 'Match not found'}, status=404)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def update_match_result(request, match_id):
+    """
+    Admin endpoint to update match scores and winner manually.
+    Body: { "house_a_score": str, "house_b_score": str, "winner_id": int|null }
+    """
+    try:
+        match = LogMatch.objects.get(id=match_id)
+        
+        house_a_score = request.data.get('house_a_score')
+        house_b_score = request.data.get('house_b_score')
+        winner_id = request.data.get('winner_id')
+        
+        # Update scores (text fields)
+        if house_a_score is not None:
+            match.house_a_score = str(house_a_score).strip()
+        if house_b_score is not None:
+            match.house_b_score = str(house_b_score).strip()
+        
+        # Manual winner selection
+        if winner_id is not None:
+            if winner_id == '' or winner_id == 'draw':
+                # Draw
+                match.winner = None
+                match.is_draw = True
+            else:
+                try:
+                    winner = House.objects.get(id=winner_id)
+                    # Validate winner is one of the participating houses
+                    if winner.id not in [match.house_a.id, match.house_b.id]:
+                        return Response({
+                            'error': 'Winner must be one of the participating houses'
+                        }, status=400)
+                    match.winner = winner
+                    match.is_draw = False
+                except House.DoesNotExist:
+                    return Response({'error': 'House not found'}, status=400)
+        
+        # If scores and winner are set, mark as completed
+        if match.house_a_score and match.house_b_score and (match.winner or match.is_draw):
+            match.status = 'completed'
+        
+        match.save()  # This triggers leaderboard update
+        
+        serializer = LogMatchSerializer(match)
+        return Response({
+            'msg': 'Match result updated successfully',
+            'match': serializer.data
+        })
+    except LogMatch.DoesNotExist:
+        return Response({'error': 'Match not found'}, status=404)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAdminUser])
+def delete_log_match(request, match_id):
+    """
+    Admin endpoint to delete a match.
+    Updates leaderboard if match was completed.
+    """
+    try:
+        match = LogMatch.objects.get(id=match_id)
+        sport = match.sport
+        house_a = match.house_a
+        house_b = match.house_b
+        
+        match.delete()
+        
+        # Recalculate leaderboard for affected houses
+        if house_a and sport:
+            leaderboard1, _ = LogLeaderboard.objects.get_or_create(house=house_a, sport=sport)
+            leaderboard1.recalculate_stats()
+        
+        if house_b and sport:
+            leaderboard2, _ = LogLeaderboard.objects.get_or_create(house=house_b, sport=sport)
+            leaderboard2.recalculate_stats()
+        
+        return Response({
+            'msg': 'Match deleted successfully. Leaderboard updated.'
+        })
+    except LogMatch.DoesNotExist:
+        return Response({'error': 'Match not found'}, status=404)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
+
+# ======================
+# Match & Leaderboard APIs (User)
+# ======================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_match_schedule(request):
+    """
+    User endpoint to view match schedule.
+    Query params: sport, house, status
+    """
+    try:
+        matches = LogMatch.objects.all()
+        
+        # Filter by sport
+        sport_id = request.query_params.get('sport')
+        if sport_id:
+            matches = matches.filter(sport_id=sport_id)
+        
+        # Filter by house
+        house_id = request.query_params.get('house')
+        if house_id:
+            matches = matches.filter(
+                models.Q(house_a_id=house_id) | models.Q(house_b_id=house_id)
+            )
+        
+        # Filter by status (default: show all non-cancelled)
+        status = request.query_params.get('status')
+        if status:
+            matches = matches.filter(status=status)
+        else:
+            matches = matches.exclude(status='cancelled')
+        
+        matches = matches.order_by('scheduled_date', 'created_at')
+        serializer = LogMatchSerializer(matches, many=True)
+        return Response(serializer.data)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_match_results(request):
+    """
+    User endpoint to view completed match results grouped by sport.
+    Query params: sport (optional)
+    """
+    try:
+        matches = LogMatch.objects.filter(status='completed')
+        
+        # Optional sport filter
+        sport_id = request.query_params.get('sport')
+        if sport_id:
+            matches = matches.filter(sport_id=sport_id)
+        
+        # Group by sport
+        sports = Sport.objects.filter(is_availableinLog=True)
+        result = []
+        
+        for sport in sports:
+            sport_matches = matches.filter(sport=sport).order_by('-scheduled_date')
+            if sport_matches.exists():
+                serializer = LogMatchSerializer(sport_matches, many=True)
+                result.append({
+                    'sport': SportSerializer(sport).data,
+                    'matches': serializer.data
+                })
+        
+        return Response(result)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_leaderboard(request):
+    """
+    User endpoint to view overall leaderboard (total points across all sports).
+    Returns houses sorted by total points.
+    """
+    try:
+        from django.db.models import Sum, Count
+        
+        houses = House.objects.all()
+        result = []
+        
+        for house in houses:
+            # Aggregate stats across all sports
+            stats = LogLeaderboard.objects.filter(house=house).aggregate(
+                total_points=Sum('points'),
+                total_wins=Sum('wins'),
+                total_draws=Sum('draws'),
+                total_losses=Sum('losses')
+            )
+            
+            result.append({
+                'house': HouseSerializer(house).data,
+                'total_points': stats['total_points'] or 0,
+                'total_wins': stats['total_wins'] or 0,
+                'total_draws': stats['total_draws'] or 0,
+                'total_losses': stats['total_losses'] or 0,
+                'total_matches': (stats['total_wins'] or 0) + (stats['total_draws'] or 0) + (stats['total_losses'] or 0)
+            })
+        
+        # Sort by total points descending
+        result.sort(key=lambda x: x['total_points'], reverse=True)
+        
+        return Response(result)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_leaderboard_by_sport(request, sport_id):
+    """
+    User endpoint to view leaderboard for a specific sport.
+    """
+    try:
+        sport = Sport.objects.get(id=sport_id, is_availableinLog=True)
+        leaderboard = LogLeaderboard.objects.filter(sport=sport).order_by(
+            '-points', '-goal_difference', '-goals_for'
+        )
+        serializer = LogLeaderboardSerializer(leaderboard, many=True)
+        return Response({
+            'sport': SportSerializer(sport).data,
+            'standings': serializer.data
+        })
+    except Sport.DoesNotExist:
+        return Response({'error': 'Sport not found or not a LOG sport'}, status=404)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
+
+# =============================================================================
+# LOG CONCLUSION ENDPOINTS
+# =============================================================================
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def conclude_log(request):
+    """
+    Admin endpoint to conclude LOG and determine champion/runner-up.
+    Creates conclusion record and auto-determines sport winners.
+    """
+    try:
+        # Check if already concluded
+        existing = LogConclusion.objects.filter(is_concluded=True).first()
+        if existing:
+            return Response({
+                'error': 'LOG has already been concluded',
+                'conclusion': LogConclusionSerializer(existing).data
+            }, status=400)
+        
+        # Create or get conclusion object
+        conclusion, created = LogConclusion.objects.get_or_create(
+            defaults={'is_concluded': False}
+        )
+        
+        # Conclude LOG
+        conclusion.conclude(request.user)
+        
+        serializer = LogConclusionSerializer(conclusion)
+        return Response({
+            'msg': 'LOG concluded successfully',
+            'conclusion': serializer.data
+        })
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_log_conclusion(request):
+    """
+    Get current LOG conclusion status.
+    Returns conclusion if exists, otherwise null.
+    """
+    try:
+        conclusion = LogConclusion.objects.first()
+        if conclusion:
+            serializer = LogConclusionSerializer(conclusion)
+            return Response(serializer.data)
+        return Response({'is_concluded': False, 'conclusion': None})
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_sport_winners(request):
+    """
+    Get all sport winners.
+    Returns list of sport winners with tie status.
+    """
+    try:
+        sport_winners = LogSportWinner.objects.select_related('sport', 'winner').all()
+        serializer = LogSportWinnerSerializer(sport_winners, many=True)
+        return Response(serializer.data)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def set_sport_winner(request, sport_id):
+    """
+    Admin endpoint to manually set sport winner (for tie situations).
+    Body: { "winner_id": house_id }
+    """
+    try:
+        sport = Sport.objects.get(id=sport_id, is_availableinLog=True)
+        sport_winner, created = LogSportWinner.objects.get_or_create(sport=sport)
+        
+        winner_id = request.data.get('winner_id')
+        if not winner_id:
+            return Response({'error': 'winner_id is required'}, status=400)
+        
+        winner = House.objects.get(id=winner_id)
+        sport_winner.winner = winner
+        sport_winner.is_tie = False
+        sport_winner.manually_set = True
+        sport_winner.save()
+        
+        serializer = LogSportWinnerSerializer(sport_winner)
+        return Response({
+            'msg': 'Sport winner set successfully',
+            'sport_winner': serializer.data
+        })
+    except Sport.DoesNotExist:
+        return Response({'error': 'Sport not found'}, status=404)
+    except House.DoesNotExist:
+        return Response({'error': 'House not found'}, status=404)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
+
