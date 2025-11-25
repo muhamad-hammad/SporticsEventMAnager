@@ -66,6 +66,7 @@ REST_FRAMEWORK = {
 
 SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
+    'TOKEN_OBTAIN_SERIALIZER': 'core.jwt_serializers.CustomTokenObtainPairSerializer',
 }
 
 # settings.py

@@ -28,6 +28,9 @@ from .serializers import (
 # Custom permission class for admin role
 class IsAdminRole(permissions.BasePermission):
     def has_permission(self, request, view):
+        print(f"DEBUG: User authenticated: {request.user.is_authenticated}")
+        print(f"DEBUG: User: {request.user}")
+        print(f"DEBUG: User role: {getattr(request.user, 'role', 'NO ROLE ATTRIBUTE')}")
         return request.user.is_authenticated and request.user.role == 'admin'
 
 
@@ -1784,7 +1787,7 @@ def get_leaderboard_by_sport(request, sport_id):
 # =============================================================================
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminRole])
 def conclude_log(request):
     """
     Admin endpoint to conclude LOG and determine champion/runner-up.
@@ -1809,7 +1812,7 @@ def conclude_log(request):
         
         serializer = LogConclusionSerializer(conclusion)
         return Response({
-            'msg': 'LOG concluded successfully',
+            'message': 'LOG concluded successfully',
             'conclusion': serializer.data
         })
     except Exception as e:
@@ -1825,10 +1828,10 @@ def get_log_conclusion(request):
     """
     try:
         conclusion = LogConclusion.objects.first()
-        if conclusion:
-            serializer = LogConclusionSerializer(conclusion)
-            return Response(serializer.data)
-        return Response({'is_concluded': False, 'conclusion': None})
+        serializer = LogConclusionSerializer(conclusion) if conclusion else None
+        return Response({
+            'conclusion': serializer.data if serializer else None
+        })
     except Exception as e:
         return Response({'error': str(e)}, status=500)
 
@@ -1849,7 +1852,7 @@ def get_sport_winners(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminRole])
 def set_sport_winner(request, sport_id):
     """
     Admin endpoint to manually set sport winner (for tie situations).

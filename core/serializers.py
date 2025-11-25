@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import (
     DraftPick, Notification, Player, PlayerRegistration,SportRegistration, User, OlympiadPlayer, Sport, PlayerSportRegistration,
     Team, TeamPlayer, House, Courts, Booking, TeamRegistration, Match, HouseProposal, SportCaptainDetail, DraftSession, LogModuleSettings,
@@ -506,23 +507,23 @@ class LogLeaderboardSerializer(serializers.ModelSerializer):
         ]
 
 class LogSportWinnerSerializer(serializers.ModelSerializer):
-    sport_name = serializers.CharField(source='sport.sports_name', read_only=True)
-    winner_name = serializers.CharField(source='winner.house_name', read_only=True)
+    sport = SportSerializer(read_only=True)
+    winner = HouseSerializer(read_only=True)
     
     class Meta:
         model = LogSportWinner
-        fields = ['id', 'sport', 'sport_name', 'winner', 'winner_name', 'is_tie', 'manually_set', 'created_at', 'updated_at']
+        fields = ['id', 'sport', 'winner', 'is_tie', 'manually_set', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
 
 
 class LogConclusionSerializer(serializers.ModelSerializer):
-    champion_name = serializers.CharField(source='champion.house_name', read_only=True)
-    runner_up_name = serializers.CharField(source='runner_up.house_name', read_only=True)
-    concluded_by_name = serializers.CharField(source='concluded_by.username', read_only=True)
+    champion = HouseSerializer(read_only=True)
+    runner_up = HouseSerializer(read_only=True)
+    concluded_by = UserSerializer(read_only=True)
     
     class Meta:
         model = LogConclusion
-        fields = ['id', 'champion', 'champion_name', 'runner_up', 'runner_up_name', 'is_concluded', 'concluded_at', 'concluded_by', 'concluded_by_name', 'final_standings', 'created_at', 'updated_at']
+        fields = ['id', 'champion', 'runner_up', 'is_concluded', 'concluded_at', 'concluded_by', 'final_standings', 'created_at', 'updated_at']
         read_only_fields = ['id', 'is_concluded', 'concluded_at', 'concluded_by', 'final_standings', 'created_at', 'updated_at']
 
 
@@ -530,24 +531,3 @@ class OlympiadSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = OlympiadSettings
         fields = ['id', 'registration_open']
-
-
-class LogSportWinnerSerializer(serializers.ModelSerializer):
-    sport_name = serializers.CharField(source='sport.sports_name', read_only=True)
-    winner_name = serializers.CharField(source='winner.house_name', read_only=True)
-    
-    class Meta:
-        model = LogSportWinner
-        fields = ['id', 'sport', 'sport_name', 'winner', 'winner_name', 'is_tie', 'manually_set', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'created_at', 'updated_at']
-
-
-class LogConclusionSerializer(serializers.ModelSerializer):
-    champion_name = serializers.CharField(source='champion.house_name', read_only=True)
-    runner_up_name = serializers.CharField(source='runner_up.house_name', read_only=True)
-    concluded_by_name = serializers.CharField(source='concluded_by.username', read_only=True)
-    
-    class Meta:
-        model = LogConclusion
-        fields = ['id', 'champion', 'champion_name', 'runner_up', 'runner_up_name', 'is_concluded', 'concluded_at', 'concluded_by', 'concluded_by_name', 'final_standings', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'is_concluded', 'concluded_at', 'concluded_by', 'final_standings', 'created_at', 'updated_at']

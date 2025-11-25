@@ -40,14 +40,6 @@ export default function CourtsHomePage() {
                                 color="from-blue-500 to-indigo-500"
                             />
 
-                            {/* Tennis Court */}
-                            <CourtCard
-                                icon="🎾"
-                                name="Tennis Court"
-                                description="Outdoor tennis court with synthetic grass and professional-grade nets."
-                                color="from-green-500 to-teal-500"
-                            />
-
                             {/* Futsal Court */}
                             <CourtCard
                                 icon="⚽"
@@ -56,20 +48,12 @@ export default function CourtsHomePage() {
                                 color="from-yellow-500 to-orange-500"
                             />
 
-                            {/* Volleyball Court */}
+                            {/* Cricket Ground */}
                             <CourtCard
-                                icon="🏐"
-                                name="Volleyball Court"
-                                description="Sand volleyball court with regulation net height and boundary lines."
-                                color="from-pink-500 to-rose-500"
-                            />
-
-                            {/* Table Tennis */}
-                            <CourtCard
-                                icon="🏓"
-                                name="Table Tennis"
-                                description="Indoor table tennis area with multiple tables and equipment available."
-                                color="from-purple-500 to-violet-500"
+                                icon="🏏"
+                                name="Cricket Ground"
+                                description="Full-size cricket ground with turf pitch and professional boundary markings."
+                                color="from-green-600 to-emerald-600"
                             />
                         </div>
                     </div>
