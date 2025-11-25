@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import (
     DraftPick, Notification, Player, PlayerRegistration,SportRegistration, User, OlympiadPlayer, Sport, PlayerSportRegistration,
     Team, TeamPlayer, House, Courts, Booking, TeamRegistration, Match, HouseProposal, SportCaptainDetail, DraftSession, LogModuleSettings,
-    LogMatch, LogLeaderboard, LogSportWinner, LogConclusion
+    LogMatch, LogLeaderboard, LogSportWinner, LogConclusion, OlympiadSettings
 )
 from decimal import Decimal
 from datetime import datetime
@@ -181,9 +181,9 @@ class TeamRegistrationSerializer(serializers.ModelSerializer):
         model = TeamRegistration
         fields = [
             "id", "team_name", "sport_id", "sport",
-            "captain", "players", "approved", "created_at"
+            "captain", "players", "approved", "rejected", "rejection_reason", "created_at"
         ]
-        read_only_fields = ["approved", "created_at", "sport"]
+        read_only_fields = ["approved", "rejected", "rejection_reason", "created_at", "sport"]
 
     def get_captain(self, obj):
         return {"id": obj.captain.id, "username": obj.captain.username}
@@ -524,6 +524,12 @@ class LogConclusionSerializer(serializers.ModelSerializer):
         model = LogConclusion
         fields = ['id', 'champion', 'champion_name', 'runner_up', 'runner_up_name', 'is_concluded', 'concluded_at', 'concluded_by', 'concluded_by_name', 'final_standings', 'created_at', 'updated_at']
         read_only_fields = ['id', 'is_concluded', 'concluded_at', 'concluded_by', 'final_standings', 'created_at', 'updated_at']
+
+
+class OlympiadSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OlympiadSettings
+        fields = ['id', 'registration_open']
 
 
 class LogSportWinnerSerializer(serializers.ModelSerializer):

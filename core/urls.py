@@ -2,11 +2,12 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import( RegisterPlayer, RejectDraftPick, SportDetailListAPIView, SportViewSet,SportRegistrationViewSet, HouseViewSet, TeamViewSet,RegisterSportView,CreateBooking
 ,AvailableSlots, CreateBooking, MyBookings, GetBooking, CalculateCost,PendingBookings,  AllBookings, UpdateBookingStatus, BulkBookCourt
-, TeamRegistrationCreateAPIView, TeamRegistrationListAPIView, ApproveTeamRegistrationAPIView, MatchViewSet,DraftPick,
+, TeamRegistrationCreateAPIView, TeamRegistrationListAPIView, ApproveTeamRegistrationAPIView, RejectTeamRegistrationAPIView, MyOlympiadTeamsAPIView, MyTeamMatchesAPIView, MatchViewSet,DraftPick,
 ProposeHouse,ApproveRejectHouse,ApproveRejectPlayer,DraftPoolBySport,PickPlayer,ApproveDraftPick,RejectDraftPick,GetLogSports,
 InitializeDraftSession,StartDraftSession,GetDraftSession,ListDraftSessions,RegisterForLogSport,GetAllPlayerRegistrations,
 OlympiadMatchCreateAPIView, OlympiadMatchListAPIView, OlympiadMatchDetailAPIView, OlympiadMatchEnterResultAPIView, MyTeamsView,
-GetLogModuleSettings, UpdateLogModuleSettings, ToggleHouseProposals, TogglePlayerRegistration, FinalizeHouses, FinalizeRegistration)
+GetLogModuleSettings, UpdateLogModuleSettings, ToggleHouseProposals, TogglePlayerRegistration, FinalizeHouses, FinalizeRegistration,
+GetOlympiadSettingsAPIView, UpdateOlympiadSettingsAPIView, ToggleOlympiadRegistrationAPIView)
 
 from . import views
 
@@ -36,7 +37,15 @@ urlpatterns = [
     path('olympiad/team/register/', TeamRegistrationCreateAPIView.as_view(), name='olympiad-team-register'),
     path('olympiad/teams/', TeamRegistrationListAPIView.as_view(), name='olympiad-team-list'),
     path('olympiad/team/<int:team_id>/approve/', ApproveTeamRegistrationAPIView.as_view(), name='olympiad-team-approve'),
+    path('olympiad/team/<int:team_id>/reject/', RejectTeamRegistrationAPIView.as_view(), name='olympiad-team-reject'),
+    path('olympiad/my-teams/', MyOlympiadTeamsAPIView.as_view(), name='my-olympiad-teams'),
+    path('olympiad/my-matches/', MyTeamMatchesAPIView.as_view(), name='my-team-matches'),
     path('olympiad/sports/', SportDetailListAPIView.as_view(), name='sports-detail-list'),
+    
+    # Olympiad Settings
+    path('olympiad/settings/', GetOlympiadSettingsAPIView.as_view(), name='olympiad-settings'),
+    path('olympiad/admin/settings/', UpdateOlympiadSettingsAPIView.as_view(), name='olympiad-admin-settings'),
+    path('olympiad/admin/toggle-registration/', ToggleOlympiadRegistrationAPIView.as_view(), name='olympiad-toggle-registration'),
     
     # Olympiad Match APIs
     path('olympiad/match/create/', OlympiadMatchCreateAPIView.as_view(), name='olympiad-match-create'),

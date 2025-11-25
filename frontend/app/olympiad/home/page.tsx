@@ -27,6 +27,27 @@ export default function OlympiadHomePage() {
                             Register Now
                         </Link>
 
+                        <div className="flex justify-center gap-4 mt-6 flex-wrap">
+                            <Link
+                                href="/olympiad/matches"
+                                className="inline-block bg-blue-800 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+                            >
+                                My Matches
+                            </Link>
+                            <Link
+                                href="/olympiad/teams"
+                                className="inline-block bg-blue-800 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+                            >
+                                My Teams
+                            </Link>
+                            <Link
+                                href="/olympiad/sports"
+                                className="inline-block bg-blue-800 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
+                            >
+                                Sports
+                            </Link>
+                        </div>
+
                         <CountdownTimer />
 
                         <p className="mt-8 text-blue-200 text-lg">Registration ends on: February 1, 2026</p>

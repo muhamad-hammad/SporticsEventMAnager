@@ -14,14 +14,14 @@ from rest_framework import generics
 from rest_framework.decorators import action
 from .models import (
     DraftPick, Notification, Player, PlayerRegistration, Sport, PlayerSportRegistration, SportRegistration,
-    Team, House, Courts, Booking, TeamRegistration, Match, HouseProposal, HouseCaptain, User, SportCaptainDetail, DraftSession, LogModuleSettings, LogMatch, LogLeaderboard, LogSportWinner, LogConclusion
+    Team, House, Courts, Booking, TeamRegistration, Match, HouseProposal, HouseCaptain, User, SportCaptainDetail, DraftSession, LogModuleSettings, LogMatch, LogLeaderboard, LogSportWinner, LogConclusion, OlympiadSettings
 )
 from .serializers import (
     PlayerRegistrationSerializer, PlayerSerializer, SportSerializer,
     PlayerSportRegistrationSerializer, TeamSerializer,
     HouseSerializer, CourtSerializer, BookingSerializer, TeamRegistrationSerializer, MatchSerializer
     ,AvailableSlotSerializer,UserSerializer,SportRegistrationSerializer, SportDetailSerializer, HouseProposalSerializer,
-    DraftSessionSerializer, DraftPickSerializer, LogModuleSettingsSerializer, LogMatchSerializer, LogLeaderboardSerializer, LogSportWinnerSerializer, LogConclusionSerializer
+    DraftSessionSerializer, DraftPickSerializer, LogModuleSettingsSerializer, LogMatchSerializer, LogLeaderboardSerializer, LogSportWinnerSerializer, LogConclusionSerializer, OlympiadSettingsSerializer
 )
 
 
@@ -398,6 +398,14 @@ class TeamRegistrationCreateAPIView(APIView):
 
     @transaction.atomic
     def post(self, request):
+        # Check if registration is open
+        settings = OlympiadSettings.get_settings()
+        if not settings.registration_open:
+            return Response(
+                {"detail": "Team registration is currently closed. Please check back later."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         serializer = TeamRegistrationSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         team = serializer.save()
@@ -420,8 +428,92 @@ class ApproveTeamRegistrationAPIView(APIView):
     def post(self, request, team_id):
         team = get_object_or_404(TeamRegistration, id=team_id)
         team.approved = True
+        team.rejected = False
+        team.rejection_reason = None
         team.save()
         return Response({"detail": "Team registration approved"})
+
+
+class RejectTeamRegistrationAPIView(APIView):
+    """Admin rejects Olympiad team"""
+    permission_classes = [IsAdminRole]
+
+    def post(self, request, team_id):
+        team = get_object_or_404(TeamRegistration, id=team_id)
+        reason = request.data.get("reason", "")
+        team.rejected = True
+        team.approved = False
+        team.rejection_reason = reason
+        team.save()
+        return Response({"detail": "Team registration rejected"})
+
+
+class MyOlympiadTeamsAPIView(generics.ListAPIView):
+    """Get teams registered by current user"""
+    serializer_class = TeamRegistrationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return TeamRegistration.objects.filter(captain=self.request.user).select_related("sport", "captain").prefetch_related("players")
+
+
+class MyTeamMatchesAPIView(APIView):
+    """Get all matches for teams registered by the current user"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Get all teams where user is captain
+        user_teams = TeamRegistration.objects.filter(captain=request.user)
+        team_ids = list(user_teams.values_list('id', flat=True))
+        
+        # Get all matches involving user's teams
+        matches = Match.objects.filter(
+            event_type='OLYMPIAD'
+        ).filter(
+            models.Q(olympiad_team1_id__in=team_ids) | 
+            models.Q(olympiad_team2_id__in=team_ids)
+        ).select_related('sport', 'olympiad_team1', 'olympiad_team2', 'olympiad_match_winner').order_by('-date')
+        
+        serializer = MatchSerializer(matches, many=True)
+        return Response(serializer.data)
+
+
+class GetOlympiadSettingsAPIView(APIView):
+    """Get Olympiad settings - Anyone can view"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        settings = OlympiadSettings.get_settings()
+        serializer = OlympiadSettingsSerializer(settings)
+        return Response(serializer.data)
+
+
+class UpdateOlympiadSettingsAPIView(APIView):
+    """Update Olympiad settings - Admin only"""
+    permission_classes = [IsAdminRole]
+
+    def patch(self, request):
+        settings = OlympiadSettings.get_settings()
+        serializer = OlympiadSettingsSerializer(settings, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ToggleOlympiadRegistrationAPIView(APIView):
+    """Toggle team registration on/off - Admin only"""
+    permission_classes = [IsAdminRole]
+
+    def post(self, request):
+        settings = OlympiadSettings.get_settings()
+        settings.registration_open = not settings.registration_open
+        settings.save()
+        return Response({
+            "detail": f"Team registration {'opened' if settings.registration_open else 'closed'}",
+            "registration_open": settings.registration_open
+        })
+
 
 
 class SportDetailListAPIView(generics.ListAPIView):

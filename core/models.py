@@ -238,6 +238,8 @@ class TeamRegistration(models.Model):
     captain = models.ForeignKey(User, on_delete=models.CASCADE)
     #total_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     approved = models.BooleanField(default=False)
+    rejected = models.BooleanField(default=False)
+    rejection_reason = models.TextField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -252,6 +254,30 @@ class OlympiadPlayer(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.team.team_name}"
+
+
+class OlympiadSettings(models.Model):
+    """Singleton model to manage Olympiad module settings"""
+    registration_open = models.BooleanField(default=False, help_text="Allow teams to register for Olympiad")
+    
+    class Meta:
+        verbose_name = "Olympiad Settings"
+        verbose_name_plural = "Olympiad Settings"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one instance exists
+        if not self.pk and OlympiadSettings.objects.exists():
+            raise ValueError("Only one OlympiadSettings instance is allowed")
+        return super().save(*args, **kwargs)
+    
+    @classmethod
+    def get_settings(cls):
+        """Get or create settings instance"""
+        settings, created = cls.objects.get_or_create(pk=1)
+        return settings
+    
+    def __str__(self):
+        return f"Olympiad Settings (Registration: {'Open' if self.registration_open else 'Closed'})"
     
 
 

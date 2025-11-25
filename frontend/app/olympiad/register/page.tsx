@@ -25,11 +25,25 @@ export default function OlympiadRegisterPage() {
     const [teamName, setTeamName] = useState('');
     const [players, setPlayers] = useState<Player[]>([{ name: '', age: '' }]);
     const [loading, setLoading] = useState(false);
+    const [settingsLoading, setSettingsLoading] = useState(true);
+    const [registrationOpen, setRegistrationOpen] = useState(false);
     const [error, setError] = useState('');
 
     useEffect(() => {
+        fetchSettings();
         fetchSports();
     }, []);
+
+    const fetchSettings = async () => {
+        try {
+            const response = await api.get('/api/olympiad/settings/');
+            setRegistrationOpen(response.data.registration_open);
+        } catch (err) {
+            console.error('Failed to fetch settings', err);
+        } finally {
+            setSettingsLoading(false);
+        }
+    };
 
     const fetchSports = async () => {
         try {
@@ -115,13 +129,41 @@ export default function OlympiadRegisterPage() {
             <div className="container mx-auto px-4 py-8 max-w-3xl">
                 <h1 className="text-3xl font-bold text-gray-900 mb-8">Olympiad Team Registration</h1>
 
-                {error && (
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-                        {error}
+                {settingsLoading ? (
+                    <div className="text-center py-12">
+                        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                        <p className="mt-4 text-gray-600">Loading...</p>
                     </div>
-                )}
+                ) : !registrationOpen ? (
+                    <div className="bg-yellow-50 border-l-4 border-yellow-500 p-6 rounded-lg">
+                        <div className="flex items-start">
+                            <div className="flex-shrink-0">
+                                <svg className="h-8 w-8 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                            <div className="ml-3">
+                                <h3 className="text-lg font-semibold text-yellow-800 mb-2">Registration Currently Closed</h3>
+                                <p className="text-yellow-700">
+                                    Team registration for the Olympiad is currently closed. Please check back later or contact the administrators for more information.
+                                </p>
+                                <div className="mt-4">
+                                    <a href="/olympiad" className="inline-block bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded transition-colors">
+                                        Back to Olympiad Home
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        {error && (
+                            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+                                {error}
+                            </div>
+                        )}
 
-                <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6 space-y-6">
+                        <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6 space-y-6">
 
                     {/* Sport Selection */}
                     <div>
@@ -233,7 +275,9 @@ export default function OlympiadRegisterPage() {
                         </button>
                     </div>
 
-                </form>
+                        </form>
+                    </>
+                )}
             </div>
         </ProtectedRoute>
     );

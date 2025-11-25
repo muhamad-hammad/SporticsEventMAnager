@@ -216,14 +216,14 @@ export default function ResultsPage() {
                       
                       {/* Sport Winner Badge */}
                       {sportWinner && (
-                        <div className="bg-white bg-opacity-20 backdrop-blur rounded-lg px-4 py-2">
+                        <div className="bg-yellow-400 border-2 border-yellow-500 rounded-lg px-4 py-3 shadow-lg">
                           {sportWinner.is_tie && !sportWinner.winner ? (
                             <div>
-                              <div className="text-yellow-200 text-sm font-semibold">⚖️ Tie</div>
+                              <div className="text-gray-800 text-sm font-semibold mb-2">⚖️ Tie - No Clear Winner</div>
                               {isAdmin && (
                                 <select
                                   onChange={(e) => handleSetSportWinner(sportResult.sport.id, parseInt(e.target.value))}
-                                  className="mt-2 px-2 py-1 text-sm rounded bg-white text-gray-900"
+                                  className="mt-2 px-3 py-2 text-sm rounded-lg bg-white text-gray-900 border border-gray-300 font-medium w-full"
                                   defaultValue=""
                                 >
                                   <option value="" disabled>Select Winner</option>
@@ -234,10 +234,12 @@ export default function ResultsPage() {
                               )}
                             </div>
                           ) : sportWinner.winner ? (
-                            <div>
-                              <div className="text-yellow-200 text-xs">🏆 Sport Champion</div>
-                              <div className="text-white font-bold text-lg">{sportWinner.winner_name}</div>
-                              {sportWinner.manually_set && <div className="text-yellow-200 text-xs">Manually set</div>}
+                            <div className="text-center">
+                              <div className="text-gray-700 text-xs font-semibold mb-1">🏆 SPORT CHAMPION</div>
+                              <div className="text-gray-900 font-bold text-xl">{sportWinner.winner_name}</div>
+                              {sportWinner.manually_set && (
+                                <div className="text-gray-600 text-xs mt-1 italic">Manually selected</div>
+                              )}
                             </div>
                           ) : null}
                         </div>
@@ -249,43 +251,72 @@ export default function ResultsPage() {
                   <div className="divide-y divide-gray-200">
                     {sportResult.matches.map((match) => (
                       <div key={match.id} className="p-6 hover:bg-gray-50 transition">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                          {/* Match Info */}
-                          <div className="flex-1">
-                            <div className="flex items-center gap-4 mb-2">
-                              <span className="text-sm text-gray-500">{formatDate(match.scheduled_date)}</span>
-                            <span className="text-sm text-gray-500">📍 {match.venue}</span>
-                          </div>
-                          
-                          <div className="grid grid-cols-[1fr,auto,1fr] gap-4 items-center">
+                        {/* Match Header */}
+                        <div className="flex items-center gap-4 mb-4">
+                          <span className="text-sm text-gray-500">📅 {formatDate(match.scheduled_date)}</span>
+                          <span className="text-sm text-gray-500">📍 {match.venue}</span>
+                          {getResultBadge(match)}
+                        </div>
+                        
+                        {/* Match Score Display */}
+                        <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                            
                             {/* House A */}
-                            <div className={`text-right ${match.winner === match.house_a ? 'font-bold text-gray-900' : 'text-gray-700'}`}>
-                              <div className="text-lg">{match.house_a_name}</div>
+                            <div className={`flex flex-col items-center md:items-end p-4 rounded-lg ${
+                              match.winner === match.house_a 
+                                ? 'bg-green-100 border-2 border-green-500' 
+                                : 'bg-white border border-gray-200'
+                            }`}>
+                              <div className="flex items-center gap-2 mb-2">
+                                {match.winner === match.house_a && <span className="text-2xl">👑</span>}
+                                <span className={`text-xl font-bold ${
+                                  match.winner === match.house_a ? 'text-green-700' : 'text-gray-700'
+                                }`}>
+                                  {match.house_a_name}
+                                </span>
+                              </div>
+                              <div className={`text-3xl font-bold ${
+                                match.winner === match.house_a ? 'text-green-600' : 'text-gray-500'
+                              }`}>
+                                {match.house_a_score}
+                              </div>
                             </div>
 
-                            {/* Score */}
-                            <div className="px-6 py-3 bg-gray-100 rounded-lg text-center min-w-[180px]">
-                              <div className="text-2xl font-bold text-gray-900">
-                                {match.house_a_score} - {match.house_b_score}
+                            {/* VS Divider */}
+                            <div className="flex items-center justify-center">
+                              <div className="bg-blue-600 text-white px-4 py-2 rounded-full font-bold text-lg">
+                                VS
                               </div>
                             </div>
 
                             {/* House B */}
-                            <div className={`text-left ${match.winner === match.house_b ? 'font-bold text-gray-900' : 'text-gray-700'}`}>
-                              <div className="text-lg">{match.house_b_name}</div>
+                            <div className={`flex flex-col items-center md:items-start p-4 rounded-lg ${
+                              match.winner === match.house_b 
+                                ? 'bg-green-100 border-2 border-green-500' 
+                                : 'bg-white border border-gray-200'
+                            }`}>
+                              <div className="flex items-center gap-2 mb-2">
+                                {match.winner === match.house_b && <span className="text-2xl">👑</span>}
+                                <span className={`text-xl font-bold ${
+                                  match.winner === match.house_b ? 'text-green-700' : 'text-gray-700'
+                                }`}>
+                                  {match.house_b_name}
+                                </span>
+                              </div>
+                              <div className={`text-3xl font-bold ${
+                                match.winner === match.house_b ? 'text-green-600' : 'text-gray-500'
+                              }`}>
+                                {match.house_b_score}
+                              </div>
                             </div>
+                            
                           </div>
                         </div>
-
-                        {/* Result Badge */}
-                        <div className="flex items-center justify-center md:justify-end">
-                          {getResultBadge(match)}
-                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
               );
             })}
           </div>

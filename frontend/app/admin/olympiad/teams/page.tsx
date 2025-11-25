@@ -19,6 +19,8 @@ interface Team {
         username: string;
     };
     approved: boolean;
+    rejected: boolean;
+    rejection_reason: string | null;
     players: Player[];
     created_at: string;
 }
@@ -28,6 +30,9 @@ export default function AdminOlympiadTeamsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [actionLoading, setActionLoading] = useState<number | null>(null);
+    const [rejectModalOpen, setRejectModalOpen] = useState(false);
+    const [selectedTeam, setSelectedTeam] = useState<number | null>(null);
+    const [rejectionReason, setRejectionReason] = useState('');
 
     useEffect(() => {
         fetchTeams();
@@ -54,7 +59,7 @@ export default function AdminOlympiadTeamsPage() {
         try {
             await api.post(`/api/olympiad/team/${teamId}/approve/`);
             // Update local state
-            setTeams(teams.map(t => t.id === teamId ? { ...t, approved: true } : t));
+            setTeams(teams.map(t => t.id === teamId ? { ...t, approved: true, rejected: false, rejection_reason: null } : t));
         } catch (err) {
             console.error('Failed to approve team', err);
             alert('Failed to approve team. Please try again.');
@@ -63,8 +68,45 @@ export default function AdminOlympiadTeamsPage() {
         }
     };
 
-    const pendingTeams = teams.filter(t => !t.approved);
+    const openRejectModal = (teamId: number) => {
+        setSelectedTeam(teamId);
+        setRejectModalOpen(true);
+        setRejectionReason('');
+    };
+
+    const closeRejectModal = () => {
+        setRejectModalOpen(false);
+        setSelectedTeam(null);
+        setRejectionReason('');
+    };
+
+    const handleReject = async () => {
+        if (!selectedTeam) return;
+        
+        setActionLoading(selectedTeam);
+        try {
+            await api.post(`/api/olympiad/team/${selectedTeam}/reject/`, {
+                reason: rejectionReason
+            });
+            // Update local state
+            setTeams(teams.map(t => t.id === selectedTeam ? { 
+                ...t, 
+                rejected: true, 
+                approved: false, 
+                rejection_reason: rejectionReason 
+            } : t));
+            closeRejectModal();
+        } catch (err) {
+            console.error('Failed to reject team', err);
+            alert('Failed to reject team. Please try again.');
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const pendingTeams = teams.filter(t => !t.approved && !t.rejected);
     const approvedTeams = teams.filter(t => t.approved);
+    const rejectedTeams = teams.filter(t => t.rejected);
 
     return (
         <AdminRoute>
@@ -121,7 +163,14 @@ export default function AdminOlympiadTeamsPage() {
                                         </div>
                                     </div>
 
-                                    <div className="flex justify-end">
+                                    <div className="flex justify-end gap-3">
+                                        <button
+                                            onClick={() => openRejectModal(team.id)}
+                                            disabled={actionLoading === team.id}
+                                            className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded transition-colors disabled:opacity-50"
+                                        >
+                                            Reject
+                                        </button>
                                         <button
                                             onClick={() => handleApprove(team.id)}
                                             disabled={actionLoading === team.id}
@@ -173,6 +222,76 @@ export default function AdminOlympiadTeamsPage() {
                         </div>
                     )}
                 </div>
+
+                {/* Rejected Teams Section */}
+                {rejectedTeams.length > 0 && (
+                    <div className="mt-12">
+                        <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Rejected Teams ({rejectedTeams.length})</h2>
+                        <div className="bg-white shadow overflow-hidden rounded-lg">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Team</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sport</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Captain</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {rejectedTeams.map((team) => (
+                                        <tr key={team.id}>
+                                            <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{team.team_name}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-gray-500">{team.sport.sports_name}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-gray-500">{team.captain.username}</td>
+                                            <td className="px-6 py-4 text-gray-500 max-w-xs truncate">{team.rejection_reason || 'No reason provided'}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                                    Rejected
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+
+                {/* Reject Modal */}
+                {rejectModalOpen && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+                            <h3 className="text-2xl font-bold text-gray-900 mb-4">Reject Team Registration</h3>
+                            <p className="text-gray-600 mb-4">
+                                Please provide a reason for rejecting this team registration. This will be visible to the team captain.
+                            </p>
+                            <textarea
+                                value={rejectionReason}
+                                onChange={(e) => setRejectionReason(e.target.value)}
+                                placeholder="Enter rejection reason (optional)..."
+                                className="w-full border border-gray-300 rounded-lg p-3 mb-4 focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                                rows={4}
+                            />
+                            <div className="flex justify-end gap-3">
+                                <button
+                                    onClick={closeRejectModal}
+                                    disabled={actionLoading !== null}
+                                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleReject}
+                                    disabled={actionLoading !== null}
+                                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg disabled:opacity-50"
+                                >
+                                    {actionLoading ? 'Rejecting...' : 'Reject Team'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </AdminRoute>
     );
