@@ -9,24 +9,26 @@ export default function Navbar() {
   const pathname = usePathname();
 
   const commonLinks = [
-    { href: '/dashboard', label: 'Home' },
+    { href: '/user/dashboard', label: 'Home' },
   ];
 
   const courtLinks = [
-    { href: '/courts-info', label: 'Courts' },
-    { href: '/courts', label: 'Book Court' },
-    { href: '/bookings', label: 'View Bookings' },
+    { href: '/courts/home', label: 'Courts Info' },
+    { href: '/courts/book', label: 'Book a Court' },
+    { href: '/bookings', label: 'My Bookings' },
   ];
 
   const olympiadLinks = [
+    { href: '/olympiad/home', label: 'Olympiad Home' },
     { href: '/olympiad/sports', label: 'Sports' },
     { href: '/olympiad/teams', label: 'Teams' },
   ];
 
   const logLinks = [
+    { href: '/log', label: 'LOG Home' },
     { href: '/log/register', label: 'Register' },
-    ...(user?.role === 'captain' ? [{ href: '/log/drafts', label: 'Drafts' }] : []),
     { href: '/log/events', label: 'Events' },
+    ...(user?.role === 'captain' ? [{ href: '/log/drafts', label: 'Drafts' }] : []),
   ];
 
   const isOlympiadPage = pathname?.startsWith('/olympiad');
@@ -65,80 +67,6 @@ export default function Navbar() {
                     {link.label}
                   </Link>
                 ))}
-
-                {/* Admin Links - Context Aware */}
-                {user?.role === 'admin' && (
-                  <>
-                    {/* Show generic links if not in specific context - REMOVED as per user request */}
-                    {/* The user wants only 'Dashboard' on the main page. Navigation is via page widgets. */}
-
-                    {/* Olympiad Admin Context */}
-                    {pathname?.startsWith('/admin/olympiad') && (
-                      <>
-                        <Link
-                          href="/admin/olympiad"
-                          className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${pathname === '/admin/olympiad'
-                            ? 'border-blue-500 text-gray-900'
-                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                            }`}
-                        >
-                          Admin Panel
-                        </Link>
-                        <Link
-                          href="/admin/olympiad/teams"
-                          className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${pathname === '/admin/olympiad/teams'
-                            ? 'border-blue-500 text-gray-900'
-                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                            }`}
-                        >
-                          Manage Teams
-                        </Link>
-                        <Link
-                          href="/admin/olympiad/matches"
-                          className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${pathname === '/admin/olympiad/matches'
-                            ? 'border-blue-500 text-gray-900'
-                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                            }`}
-                        >
-                          Manage Matches
-                        </Link>
-                      </>
-                    )}
-
-                    {/* Booking Admin Context */}
-                    {pathname?.startsWith('/admin/bookings') && (
-                      <>
-                        <Link
-                          href="/admin/bookings"
-                          className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${pathname === '/admin/bookings'
-                            ? 'border-blue-500 text-gray-900'
-                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                            }`}
-                        >
-                          Admin Panel
-                        </Link>
-                        <Link
-                          href="/admin/bookings/manage"
-                          className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${pathname === '/admin/bookings/manage'
-                            ? 'border-blue-500 text-gray-900'
-                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                            }`}
-                        >
-                          Manage Bookings
-                        </Link>
-                        <Link
-                          href="/admin/bookings/history"
-                          className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${pathname === '/admin/bookings/history'
-                            ? 'border-blue-500 text-gray-900'
-                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                            }`}
-                        >
-                          All Bookings
-                        </Link>
-                      </>
-                    )}
-                  </>
-                )}
 
                 {/* User Context-Aware Links */}
                 {user?.role !== 'admin' && currentLinks.map((link) => (

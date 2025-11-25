@@ -31,15 +31,27 @@ export default function AdminNavbar() {
         { href: '/admin/log/draft', label: 'Draft' },
         { href: '/admin/log/house-proposals', label: 'Proposals' },
         { href: '/admin/log/players', label: 'Players' },
+        { href: '/admin/log/matches', label: 'Matches' },
+        { href: '/admin/log/settings', label: 'Settings' },
+        { href: '/admin/log/conclusion', label: 'Conclusion' },
+    ];
+
+    const dashboardLinks = [
+        { href: '/admin/olympiad', label: 'Olympiad' },
+        { href: '/admin/log', label: 'League of Glory' },
+        { href: '/admin/bookings', label: 'Bookings' },
     ];
 
     // Determine which context we're in
     const isOlympiadAdmin = pathname?.startsWith('/admin/olympiad');
     const isBookingAdmin = pathname?.startsWith('/admin/bookings');
     const isLogAdmin = pathname?.startsWith('/admin/log');
+    const isDashboard = pathname === '/admin/dashboard';
 
     let contextLinks: { href: string; label: string }[] = [];
-    if (isOlympiadAdmin) {
+    if (isDashboard) {
+        contextLinks = dashboardLinks;
+    } else if (isOlympiadAdmin) {
         contextLinks = olympiadAdminLinks;
     } else if (isBookingAdmin) {
         contextLinks = bookingAdminLinks;
@@ -90,13 +102,15 @@ export default function AdminNavbar() {
 
                     {/* User Info & Logout */}
                     <div className="flex items-center space-x-4">
-                        <Link
-                            href="/dashboard"
-                            className="text-sm text-gray-100 hover:text-white transition-colors flex items-center space-x-1"
-                        >
-                            <span>←</span>
-                            <span>Dashboard</span>
-                        </Link>
+                        {pathname !== '/admin/dashboard' && (
+                            <Link
+                                href="/admin/dashboard"
+                                className="text-sm text-gray-100 hover:text-white transition-colors flex items-center space-x-1"
+                            >
+                                <span>←</span>
+                                <span>Admin Dashboard</span>
+                            </Link>
+                        )}
                         <span className="text-sm text-gray-100">
                             {user?.username}
                         </span>

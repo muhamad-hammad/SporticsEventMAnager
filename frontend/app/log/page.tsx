@@ -25,6 +25,41 @@ export default function LogLandingPage() {
             href: '/log/drafts',
             icon: '👥',
             color: 'bg-green-500'
+        },
+        {
+            title: 'My Teams',
+            description: 'View your teams and squad details.',
+            href: '/log/my-teams',
+            icon: '👕',
+            color: 'bg-orange-500'
+        },
+        {
+            title: 'Schedule',
+            description: 'Check upcoming matches and venues.',
+            href: '/log/schedule',
+            icon: '📅',
+            color: 'bg-teal-500'
+        },
+        {
+            title: 'Results',
+            description: 'View match results and scores.',
+            href: '/log/results',
+            icon: '📊',
+            color: 'bg-indigo-500'
+        },
+        {
+            title: 'Leaderboard',
+            description: 'Check house standings and points.',
+            href: '/log/leaderboard',
+            icon: '📈',
+            color: 'bg-red-500'
+        },
+        {
+            title: 'Season Results',
+            description: 'View final standings and champions.',
+            href: '/log/conclusion',
+            icon: '🏆',
+            color: 'bg-yellow-500'
         }
     ];
 

@@ -32,8 +32,8 @@ export default function CourtsNavbar() {
                                 key={link.href}
                                 href={link.href}
                                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${pathname === link.href
-                                        ? 'bg-white/20 text-white'
-                                        : 'text-green-100 hover:bg-white/10 hover:text-white'
+                                    ? 'bg-white/20 text-white'
+                                    : 'text-green-100 hover:bg-white/10 hover:text-white'
                                     }`}
                             >
                                 {link.label}
@@ -44,7 +44,7 @@ export default function CourtsNavbar() {
                     {/* User Info & Logout */}
                     <div className="flex items-center space-x-4">
                         <Link
-                            href="/dashboard"
+                            href={user?.role === 'admin' ? '/admin/dashboard' : '/user/dashboard'}
                             className="text-sm text-green-100 hover:text-white transition-colors flex items-center space-x-1"
                         >
                             <span>←</span>

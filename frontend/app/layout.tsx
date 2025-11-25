@@ -5,6 +5,7 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
 import { usePathname } from "next/navigation";
+import { Toaster } from 'react-hot-toast';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,6 +28,7 @@ export default function RootLayout({
 
   const isLogRoute = pathname?.startsWith('/log');
   const isAdminRoute = pathname?.startsWith('/admin');
+  const isUserRoute = pathname?.startsWith('/user');
 
   return (
     <html lang="en">
@@ -34,7 +36,8 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          {!isOlympiadRoute && !isCourtsRoute && !isLogRoute && !isAdminRoute && <Navbar />}
+          <Toaster position="top-right" />
+          {!isOlympiadRoute && !isCourtsRoute && !isLogRoute && !isAdminRoute && !isUserRoute && <Navbar />}
           <main className="min-h-screen bg-gray-50">
             {children}
           </main>

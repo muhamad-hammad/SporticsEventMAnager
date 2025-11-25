@@ -12,6 +12,11 @@ export default function LogNavbar() {
         { href: '/log', label: 'Home' },
         { href: '/log/register', label: 'Register' },
         { href: '/log/house-proposal', label: 'House Proposal' },
+        { href: '/log/my-teams', label: 'My Teams' },
+        { href: '/log/schedule', label: 'Schedule' },
+        { href: '/log/results', label: 'Results' },
+        { href: '/log/leaderboard', label: 'Leaderboard' },
+        { href: '/log/conclusion', label: 'Conclusion' },
         ...(user?.role === 'captain' ? [{ href: '/log/drafts', label: 'Drafts' }] : []),
     ];
 
@@ -44,7 +49,7 @@ export default function LogNavbar() {
                     {/* User Info & Logout */}
                     <div className="flex items-center space-x-4">
                         <Link
-                            href="/dashboard"
+                            href={user?.role === 'admin' ? '/admin/dashboard' : '/user/dashboard'}
                             className="text-sm text-purple-100 hover:text-white transition-colors flex items-center space-x-1"
                         >
                             <span>←</span>

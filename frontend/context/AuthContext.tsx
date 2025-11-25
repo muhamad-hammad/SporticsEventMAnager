@@ -98,8 +98,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('user', JSON.stringify(userData));
       }
 
-      // 4. Redirect to main dashboard for everyone
-      router.push('/dashboard');
+      console.log('Login successful. User Data:', userData);
+      console.log('User Role:', userData.role);
+
+      // 4. Redirect based on role
+      if (userData.role === 'admin') {
+        console.log('Redirecting to /admin/dashboard');
+        router.push('/admin/dashboard');
+      } else {
+        console.log('Redirecting to /user/dashboard');
+        router.push('/user/dashboard');
+      }
 
     } catch (error) {
       console.error('Login failed:', error);
