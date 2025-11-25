@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from .models import (
     DraftPick, Notification, Player, PlayerRegistration,SportRegistration, User, OlympiadPlayer, Sport, PlayerSportRegistration,
-    Team, TeamPlayer, House, Courts, Booking, TeamRegistration, Match, HouseProposal, SportCaptainDetail, DraftSession
+    Team, TeamPlayer, House, Courts, Booking, TeamRegistration, Match, HouseProposal, SportCaptainDetail, DraftSession, LogModuleSettings,
+    LogMatch, LogLeaderboard, LogSportWinner, LogConclusion
 )
 from decimal import Decimal
 from datetime import datetime
@@ -14,7 +15,7 @@ from django.db import transaction
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "username", "email", "role", "department", "contact_no"]
+        fields = ["id", "username", "email", "first_name", "role", "department", "contact_no"]
 
 
 
@@ -445,3 +446,102 @@ class HouseProposalSerializer(serializers.ModelSerializer):
             )
         
         return proposal
+
+
+# -----------------------------
+# LOG MODULE SETTINGS SERIALIZER
+# -----------------------------
+class LogModuleSettingsSerializer(serializers.ModelSerializer):
+    updated_by_username = serializers.CharField(source='updated_by.username', read_only=True)
+    
+    class Meta:
+        model = LogModuleSettings
+        fields = [
+            'id', 'house_proposals_open', 'player_registration_open', 
+            'houses_finalized', 'registration_finalized', 
+            'updated_at', 'updated_by', 'updated_by_username'
+        ]
+        read_only_fields = ['id', 'updated_at', 'updated_by', 'updated_by_username']
+
+
+# -----------------------------
+# LOG MATCH SERIALIZER
+# -----------------------------
+class LogMatchSerializer(serializers.ModelSerializer):
+    sport_name = serializers.CharField(source='sport.sports_name', read_only=True)
+    house_a_name = serializers.CharField(source='house_a.house_name', read_only=True)
+    house_b_name = serializers.CharField(source='house_b.house_name', read_only=True)
+    winner_name = serializers.CharField(source='winner.house_name', read_only=True, allow_null=True)
+    created_by_username = serializers.CharField(source='created_by.username', read_only=True, allow_null=True)
+    
+    class Meta:
+        model = LogMatch
+        fields = [
+            'id', 'sport', 'sport_name', 'house_a', 'house_a_name', 
+            'house_b', 'house_b_name', 'team_a', 'team_b',
+            'scheduled_date', 'venue', 'status',
+            'house_a_score', 'house_b_score', 'winner', 'winner_name', 'is_draw',
+            'created_by', 'created_by_username', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'winner', 'is_draw', 'created_by', 'created_at', 'updated_at']
+
+
+# -----------------------------
+# LOG LEADERBOARD SERIALIZER
+# -----------------------------
+class LogLeaderboardSerializer(serializers.ModelSerializer):
+    house_name = serializers.CharField(source='house.house_name', read_only=True)
+    sport_name = serializers.CharField(source='sport.sports_name', read_only=True)
+    
+    class Meta:
+        model = LogLeaderboard
+        fields = [
+            'id', 'house', 'house_name', 'sport', 'sport_name',
+            'matches_played', 'wins', 'draws', 'losses', 'points',
+            'goals_for', 'goals_against', 'goal_difference', 'updated_at'
+        ]
+        read_only_fields = [
+            'id', 'matches_played', 'wins', 'draws', 'losses', 'points',
+            'goals_for', 'goals_against', 'goal_difference', 'updated_at'
+        ]
+
+class LogSportWinnerSerializer(serializers.ModelSerializer):
+    sport_name = serializers.CharField(source='sport.sports_name', read_only=True)
+    winner_name = serializers.CharField(source='winner.house_name', read_only=True)
+    
+    class Meta:
+        model = LogSportWinner
+        fields = ['id', 'sport', 'sport_name', 'winner', 'winner_name', 'is_tie', 'manually_set', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class LogConclusionSerializer(serializers.ModelSerializer):
+    champion_name = serializers.CharField(source='champion.house_name', read_only=True)
+    runner_up_name = serializers.CharField(source='runner_up.house_name', read_only=True)
+    concluded_by_name = serializers.CharField(source='concluded_by.username', read_only=True)
+    
+    class Meta:
+        model = LogConclusion
+        fields = ['id', 'champion', 'champion_name', 'runner_up', 'runner_up_name', 'is_concluded', 'concluded_at', 'concluded_by', 'concluded_by_name', 'final_standings', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'is_concluded', 'concluded_at', 'concluded_by', 'final_standings', 'created_at', 'updated_at']
+
+
+class LogSportWinnerSerializer(serializers.ModelSerializer):
+    sport_name = serializers.CharField(source='sport.sports_name', read_only=True)
+    winner_name = serializers.CharField(source='winner.house_name', read_only=True)
+    
+    class Meta:
+        model = LogSportWinner
+        fields = ['id', 'sport', 'sport_name', 'winner', 'winner_name', 'is_tie', 'manually_set', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class LogConclusionSerializer(serializers.ModelSerializer):
+    champion_name = serializers.CharField(source='champion.house_name', read_only=True)
+    runner_up_name = serializers.CharField(source='runner_up.house_name', read_only=True)
+    concluded_by_name = serializers.CharField(source='concluded_by.username', read_only=True)
+    
+    class Meta:
+        model = LogConclusion
+        fields = ['id', 'champion', 'champion_name', 'runner_up', 'runner_up_name', 'is_concluded', 'concluded_at', 'concluded_by', 'concluded_by_name', 'final_standings', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'is_concluded', 'concluded_at', 'concluded_by', 'final_standings', 'created_at', 'updated_at']

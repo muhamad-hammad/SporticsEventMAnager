@@ -1,0 +1,6 @@
+username,email,password,first_name,last_name,contact_no,department,role,sport_ids
+ahmed_ali,ahmed@example.com,password123,Ahmed,Ali,0501234567,CS,player,"1,2"
+sara_khan,sara@example.com,password123,Sara,Khan,0507654321,EE,player,"1"
+omar_hassan,omar@example.com,password123,Omar,Hassan,0509876543,ME,player,"2,3"
+fatima_noor,fatima@example.com,password123,Fatima,Noor,0503456789,CS,player,"1,2,3"
+mohamed_salem,mohamed@example.com,password123,Mohamed,Salem,0508765432,IT,player,"2"

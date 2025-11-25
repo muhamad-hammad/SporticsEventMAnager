@@ -9,6 +9,7 @@ interface User {
     id: number;
     username: string;
     email: string;
+    first_name: string;
 }
 
 interface PlayerRegistration {
@@ -226,18 +227,23 @@ export default function DraftSessionPage() {
                     )}
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Available Players */}
-                        {session.status === 'in_progress' && canPick && (
+                        {/* Available Players - Always show during draft */}
+                        {session.status === 'in_progress' && (
                             <div className="lg:col-span-1">
                                 <div className="bg-white rounded-lg shadow-md p-6 sticky top-6">
                                     <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                                        Pick a Player ({availablePlayers.length} available)
+                                        {canPick ? 'Pick a Player' : 'Available Players'} ({availablePlayers.length})
                                     </h3>
                                     <div className="max-h-96 overflow-y-auto space-y-2 mb-4">
-                                        {availablePlayers.map((player) => (
+                                        {availablePlayers.length === 0 ? (
+                                            <p className="text-gray-400 text-center py-8">No players available</p>
+                                        ) : (
+                                            availablePlayers.map((player) => (
                                             <label
                                                 key={player.id}
-                                                className={`block p-3 border-2 rounded-lg cursor-pointer transition-colors ${
+                                                className={`block p-3 border-2 rounded-lg transition-colors ${
+                                                    !canPick ? 'cursor-default opacity-60' : 'cursor-pointer'
+                                                } ${
                                                     selectedPlayer === player.id
                                                         ? 'border-blue-500 bg-blue-50'
                                                         : 'border-gray-200 hover:border-gray-300'
@@ -248,13 +254,15 @@ export default function DraftSessionPage() {
                                                     name="player"
                                                     value={player.id}
                                                     checked={selectedPlayer === player.id}
-                                                    onChange={() => setSelectedPlayer(player.id)}
+                                                    onChange={() => canPick && setSelectedPlayer(player.id)}
+                                                    disabled={!canPick}
                                                     className="sr-only"
                                                 />
                                                 <div className="flex items-center justify-between">
                                                     <div>
-                                                        <p className="font-medium text-gray-900">{player.user.username}</p>
-                                                        <p className="text-sm text-gray-600">{player.user.email}</p>
+                                                        <p className="font-medium text-gray-900">{player.user.first_name}</p>
+                                                        <p className="text-sm text-gray-600">{player.user.username}</p>
+                                                        <p className="text-xs text-gray-500">{player.user.email}</p>
                                                     </div>
                                                     {selectedPlayer === player.id && (
                                                         <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
@@ -263,21 +271,28 @@ export default function DraftSessionPage() {
                                                     )}
                                                 </div>
                                             </label>
-                                        ))}
+                                        ))
+                                        )}
                                     </div>
-                                    <button
-                                        onClick={handlePickPlayer}
-                                        disabled={!selectedPlayer}
-                                        className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
-                                    >
-                                        Confirm Pick
-                                    </button>
+                                    {canPick ? (
+                                        <button
+                                            onClick={handlePickPlayer}
+                                            disabled={!selectedPlayer}
+                                            className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
+                                        >
+                                            Confirm Pick
+                                        </button>
+                                    ) : (
+                                        <div className="w-full px-4 py-3 bg-gray-100 text-gray-600 rounded-lg text-center font-medium">
+                                            Wait for current captain
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}
 
                         {/* Teams and their picks */}
-                        <div className={canPick && session.status === 'in_progress' ? 'lg:col-span-2' : 'lg:col-span-3'}>
+                        <div className={session.status === 'in_progress' ? 'lg:col-span-2' : 'lg:col-span-3'}>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {teams.map((team) => {
                                     const teamPicks = getTeamPicks(team.id);
