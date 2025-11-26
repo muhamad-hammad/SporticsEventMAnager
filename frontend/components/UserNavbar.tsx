@@ -17,7 +17,7 @@ export default function UserNavbar() {
     const olympiadLinks = [
         { href: '/olympiad/home', label: 'Olympiad Home' },
         { href: '/olympiad/sports', label: 'Sports' },
-        { href: '/olympiad/teams', label: 'Teams' },
+        { href: '/olympiad/matches', label: 'My Matches' },
     ];
 
     const courtLinks = [
