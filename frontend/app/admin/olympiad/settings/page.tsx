@@ -50,7 +50,6 @@ export default function OlympiadSettingsPage() {
 
     return (
         <AdminRoute>
-            <AdminNavbar />
             <div className="min-h-screen bg-gray-50 font-sans">
                 <div className="container mx-auto px-4 py-8 max-w-4xl">
                     
@@ -133,27 +132,6 @@ export default function OlympiadSettingsPage() {
                                         <strong>ℹ️ Note:</strong> Closing registration will prevent new team registrations. 
                                         Existing teams and their statuses will not be affected.
                                     </p>
-                                </div>
-                            </div>
-
-                            {/* Quick Stats Card */}
-                            <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl shadow-lg p-8 text-white">
-                                <h3 className="text-xl font-bold mb-4">Quick Actions</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <a 
-                                        href="/admin/olympiad/teams" 
-                                        className="bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm rounded-lg p-4 transition-all"
-                                    >
-                                        <div className="font-semibold">Manage Teams</div>
-                                        <div className="text-sm opacity-90">Approve/Reject registrations</div>
-                                    </a>
-                                    <a 
-                                        href="/admin/olympiad/matches" 
-                                        className="bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm rounded-lg p-4 transition-all"
-                                    >
-                                        <div className="font-semibold">Manage Matches</div>
-                                        <div className="text-sm opacity-90">Schedule & update results</div>
-                                    </a>
                                 </div>
                             </div>
 
