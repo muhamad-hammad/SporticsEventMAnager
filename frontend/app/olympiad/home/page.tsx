@@ -12,8 +12,9 @@ export default function OlympiadHomePage() {
                 <div className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white relative overflow-hidden">
                     <div className="absolute inset-0 bg-black/20"></div>
                     <div className="container mx-auto px-4 py-20 relative z-10 text-center">
-                        <div className="mb-8">
-                            <span className="text-6xl mb-4 block">🏅</span>
+                        <div className="mb-8 flex flex-col items-center">
+                            {/* <span className="text-6xl mb-4 block">🏅</span> */}
+                            <img src="/olympiad-logo.png" alt="Olympiad Logo" className="h-32 w-32 object-contain mb-6 drop-shadow-2xl animate-pulse-slow" />
                             <h1 className="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight">
                                 OLYMPIAD 2026
                             </h1>
@@ -27,26 +28,7 @@ export default function OlympiadHomePage() {
                             Register Now
                         </Link>
 
-                        <div className="flex justify-center gap-4 mt-6 flex-wrap">
-                            <Link
-                                href="/olympiad/matches"
-                                className="inline-block bg-blue-800 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
-                            >
-                                My Matches
-                            </Link>
-                            <Link
-                                href="/olympiad/teams"
-                                className="inline-block bg-blue-800 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
-                            >
-                                My Teams
-                            </Link>
-                            <Link
-                                href="/olympiad/sports"
-                                className="inline-block bg-blue-800 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors"
-                            >
-                                Sports
-                            </Link>
-                        </div>
+
 
                         <CountdownTimer />
 
