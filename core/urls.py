@@ -9,6 +9,8 @@ OlympiadMatchCreateAPIView, OlympiadMatchListAPIView, OlympiadMatchDetailAPIView
 GetLogModuleSettings, UpdateLogModuleSettings, ToggleHouseProposals, TogglePlayerRegistration, FinalizeHouses, FinalizeRegistration,
 GetOlympiadSettingsAPIView, UpdateOlympiadSettingsAPIView, ToggleOlympiadRegistrationAPIView)
 
+from .views_analytics import AdminStatsView, BookingAnalyticsView
+
 from . import views
 
 router = DefaultRouter()
@@ -33,6 +35,10 @@ urlpatterns = [
     path('admin/bookings/pending/', PendingBookings.as_view()), # pending bookings for admin
     path('admin/bookings/update-status/<int:booking_id>/', UpdateBookingStatus.as_view(), name='update-booking-status'),    # update booking status API
     path('admin/bookings/all/', AllBookings.as_view()), # all bookings for admin
+    
+    # Analytics
+    path('admin/stats/', AdminStatsView.as_view()),
+    path('admin/bookings/analytics/', BookingAnalyticsView.as_view()),
     
     path('olympiad/team/register/', TeamRegistrationCreateAPIView.as_view(), name='olympiad-team-register'),
     path('olympiad/teams/', TeamRegistrationListAPIView.as_view(), name='olympiad-team-list'),

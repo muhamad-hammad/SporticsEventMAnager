@@ -11,7 +11,7 @@ export default function OlympiadNavbar() {
     const olympiadLinks = [
         { href: '/olympiad/home', label: 'Home' },
         { href: '/olympiad/sports', label: 'Sports' },
-        { href: '/olympiad/teams', label: 'Teams' },
+        { href: '/olympiad/matches', label: 'My Matches' },
         { href: '/olympiad/register', label: 'Register' },
         { href: '/olympiad/rules', label: 'Rules' },
     ];
@@ -22,7 +22,8 @@ export default function OlympiadNavbar() {
                 <div className="flex items-center justify-between h-16">
                     {/* Logo/Brand */}
                     <Link href="/olympiad/home" className="flex items-center space-x-2">
-                        <span className="text-2xl">🏅</span>
+                        {/* <span className="text-2xl">🏅</span> */}
+                        <img src="/olympiad-logo.png" alt="Olympiad Logo" className="h-10 w-10 object-contain rounded-full bg-white/10 p-1" />
                         <span className="text-xl font-bold">Olympiad 2026</span>
                     </Link>
 
