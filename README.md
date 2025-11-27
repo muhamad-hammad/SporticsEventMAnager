@@ -180,7 +180,7 @@ npm install
 <div class="section">
   <h2>👥 Contributors</h2>
   <p><a href="https://github.com/SyedMuhammadShubairHyder">Shubair Hyder</a></p>
-  <p><a href="https://github.com/muhammad-hammad">Hammad Bhatti</a></p>
+  <p><a href="https://github.com/muhamad-hammad">Hammad Bhatti</a></p>
   <p><a href="https://github.com/ayeshowcode">Ayesh</a></p>
 </div>
 
