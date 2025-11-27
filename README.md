@@ -1,3 +1,10 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sportics Event Manager - Documentation</title>
+
 <style>
   body {
     font-family: "Segoe UI", Arial, sans-serif;
@@ -90,6 +97,9 @@
     margin-right: 10px;
   }
 </style>
+</head>
+
+<body>
 
 <div class="header">
   <h1>🏆 Sportics Event Manager</h1>
@@ -102,7 +112,7 @@
     <li>Features</li>
     <li>Tech Stack</li>
     <li>System Requirements</li>
-    <li>Installation (Backend + Frontend)</li>
+        <li>Installation (Backend + Frontend)</li>
     <li>Running the Application</li>
     <li>Project Structure</li>
     <li>API Documentation</li>
@@ -158,8 +168,10 @@
   <h2>📦 Installation — Backend (Django)</h2>
 
   <h3>1. Clone the repository</h3>
-  <pre>git clone https://github.com/muhamad-hammad/SporticsEventMAnager.git
-cd SporticsEventMAnager</pre>
+  <pre>
+git clone https://github.com/muhamad-hammad/SporticsEventManager.git
+cd SporticsEventManager
+  </pre>
 
   <h3>2. Create Virtual Environment</h3>
   <pre>
@@ -174,7 +186,7 @@ env\Scripts\activate
   <h3>4. Setup Database</h3>
   <pre>
 python manage.py makemigrations
-python manage.py migrate
+            python manage.py migrate
 python manage.py createsuperuser
   </pre>
 </div>
@@ -188,7 +200,7 @@ python manage.py createsuperuser
   <h3>2. Install packages</h3>
   <pre>npm install</pre>
 
-  <h3>3. Environment</h3>
+  <h3>3. Environment Variables</h3>
   <pre>
 NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
   </pre>
@@ -204,11 +216,10 @@ python manage.py runserver
   </pre>
 
   <h3>Start Frontend</h3>
-  <pre>
-npm run dev
-  </pre>
+  <pre>npm run dev</pre>
 
-  <p>✨ Backend → http://127.0.0.1:8000<br>✨ Frontend → http://localhost:3000</p>
+  <p>✨ Backend → http://127.0.0.1:8000<br>
+     ✨ Frontend → http://localhost:3000</p>
 </div>
 
 <div class="section">
@@ -261,12 +272,14 @@ npm install
 
 <div class="section">
   <h2>👥 Contributors</h2>
-  <p>[Shubair Hyder](https://github.com/SyedMuhammadShubairHyder)</p>
-  <p>[Hammad Bhatti ](https://github.com/muhammad-hammad)</p>
-  <p>[Ayesh](https://github.com/ayeshowcode)</p>
-  
+  <p><a href="https://github.com/SyedMuhammadShubairHyder">Shubair Hyder</a></p>
+  <p><a href="https://github.com/muhammad-hammad">Hammad Bhatti</a></p>
+  <p><a href="https://github.com/ayeshowcode">Ayesh</a></p>
 </div>
 
 <div class="footer">
-  <p>Made with ❤️ for the Database Systems Project</p>
+  <p>Made for the Database Systems Project</p>
 </div>
+
+</body>
+</html>
