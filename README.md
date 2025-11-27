@@ -1,106 +1,105 @@
-# Sportics Event Manager
+<div align="center">
 
-Simple sports event management system with Django REST API backend and Next.js frontend.
+<h1 style="font-size: 42px; font-weight: 800; margin-bottom: 10px;">🏆 Sportics Event Manager</h1>
 
-## Running the Application
+<p style="font-size: 18px; max-width: 900px; line-height: 1.6;">
+A comprehensive sports event management platform built with 
+<strong>Django REST Framework</strong> and <strong>Next.js</strong>.  
+Manages <strong>LOG (League of Games)</strong>, <strong>Olympiad</strong>, 
+court bookings, draft system, team management, player registrations, and match scheduling.
+</p>
 
-### Start Backend (Django)
+<hr style="width: 60%; border: 1px solid #ddd;">
+
+</div>
+
+<br>
+
+---
+
+## <h2 style="color:#4A90E2;">📋 Table of Contents</h2>
+
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [System Requirements](#-system-requirements)
+- [Installation & Setup](#installation--setup)
+- [Running the Application](#-running-the-application)
+- [Project Structure](#-project-structure)
+- [API Documentation](#-api-documentation)
+- [Default Admin Access](#-default-admin-access)
+- [Troubleshooting](#-troubleshooting)
+
+---
+
+## <h2 style="color:#27AE60;">✨ Features</h2>
+
+<div style="padding: 15px; border: 1px solid #e1e1e1; border-radius: 10px; background: #fafafa;">
+
+### 🔐 **Authentication & Users**
+- JWT Authentication  
+- Role-based access control  
+- Token refresh  
+- User profiles  
+
+### 🏆 **LOG Module**
+- House proposals  
+- Draft system  
+- Captain assignment  
+- Match schedules & results  
+- Leaderboards  
+
+### 🎯 **Olympiad Module**
+- Team registrations with fee handling  
+- Multi-sport tournaments  
+- Bracket management  
+
+### 🏟️ **Court Booking**
+- Real-time availability  
+- Price calculations  
+- Admin approval flow  
+
+### 👥 **Team & Sports Management**
+- Create teams  
+- Manage rosters  
+- Configure sports  
+
+</div>
+
+---
+
+## <h2 style="color:#E67E22;">🛠 Tech Stack</h2>
+
+### **Backend**
+- Django 5.2.7  
+- DRF 3.16.1  
+- JWT (SimpleJWT + Djoser)  
+- SQLite / MySQL  
+- Python 3.11  
+
+### **Frontend**
+- Next.js 16 (App Router)  
+- React 19  
+- TypeScript  
+- Tailwind CSS  
+- Axios  
+- Framer Motion  
+
+---
+
+## <h2 style="color:#9B59B6;">💻 System Requirements</h2>
+
+- Python 3.11+  
+- Node.js 18+  
+- Git  
+- VS Code / PyCharm  
+
+---
+
+# 🔧 Installation & Setup
+
+## **Backend Setup (Django)**
+
+### 1️⃣ Clone Repo
 ```bash
-cd C:\Users\Ayesh\OneDrive\Documents\uni\sem5\DB\project\SporticsEventMAnager
-.venv\Scripts\python.exe manage.py runserver
-```
-Backend runs at: **http://127.0.0.1:8000**
-
-### Start Frontend (Next.js)
-```bash
-cd frontend
-npm run dev
-```
-Frontend runs at: **http://localhost:3000**
-
-## Features
-
-### 1. Authentication
-- Register new user
-- Login with JWT tokens
-- Auto token refresh
-
-### 2. Sports Management
-- View all sports
-- Create new sport (name, event type: LOG/OLYMPIAD, team-based)
-- Delete sport
-
-### 3. Houses Management
-- View all houses
-- Create house (name, status: pending/active/inactive)
-- Delete house
-
-### 4. Teams Management
-- View all teams
-- Create team (name, event type, sport, optional house)
-- Delete team
-
-### 5. Courts
-- View all available courts
-- See location and hourly rates
-
-### 6. Court Booking
-- Book court time slots
-- Select date, start time, end time
-- Prevents double booking
-
-### 7. Player Registration
-- Register as a player
-- Register for specific sports
-
-## API Endpoints
-
-### Auth
-- POST `/auth/users/` - Register
-- POST `/auth/jwt/create/` - Login
-- POST `/auth/jwt/refresh/` - Refresh token
-- GET `/auth/users/me/` - Get current user
-
-### Resources
-- GET/POST/PUT/DELETE `/api/sports/` - Sports CRUD
-- GET/POST/PUT/DELETE `/api/houses/` - Houses CRUD
-- GET/POST/PUT/DELETE `/api/teams/` - Teams CRUD
-- GET `/api/courts/` - List courts
-- POST `/api/book-slot/` - Book court (auth required)
-- POST `/api/player/register/` - Register as player (auth required)
-- POST `/api/register-sport/` - Register for sport (auth required)
-
-## Tech Stack
-
-**Backend:**
-- Django 5.2.8
-- Django REST Framework
-- JWT Authentication (djoser + simplejwt)
-- SQLite Database
-
-**Frontend:**
-- Next.js 16 (App Router)
-- TypeScript
-- Tailwind CSS
-- Axios
-
-## Database Models
-
-1. **User** - Custom user with roles (general/player/captain/admin)
-2. **House** - Houses with captains and status
-3. **Sport** - Sports with event types and team configuration
-4. **Player** - Player profiles linked to users
-5. **Team** - Teams linked to sports and houses
-6. **Courts** - Court details with pricing
-7. **Booking** - Court bookings with time slots
-8. **PlayerSportRegistration** - Player-sport enrollments
-
-## Default Accounts
-
-Check database for existing users or register new ones.
-
-## Notes
-
-- All authenticated endpoints require JWT Bearer token
-- CORS configured for localhost:3000
-- Token refresh happens automatically on 401 errors
+git clone https://github.com/muhamad-hammad/SporticsEventMAnager.git
+cd SporticsEventMAnager/Sportics
