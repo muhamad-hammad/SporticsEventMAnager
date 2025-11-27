@@ -1,105 +1,272 @@
-<div align="center">
+<style>
+  body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: #f5f7fa;
+    line-height: 1.6;
+    color: #333;
+  }
 
-<h1 style="font-size: 42px; font-weight: 800; margin-bottom: 10px;">🏆 Sportics Event Manager</h1>
+  .header {
+    text-align: center;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #004aad, #00b4d8);
+    color: white;
+    border-radius: 12px;
+  }
 
-<p style="font-size: 18px; max-width: 900px; line-height: 1.6;">
-A comprehensive sports event management platform built with 
-<strong>Django REST Framework</strong> and <strong>Next.js</strong>.  
-Manages <strong>LOG (League of Games)</strong>, <strong>Olympiad</strong>, 
-court bookings, draft system, team management, player registrations, and match scheduling.
-</p>
+  h1 {
+    font-size: 42px;
+    margin-bottom: 10px;
+  }
 
-<hr style="width: 60%; border: 1px solid #ddd;">
+  .tagline {
+    font-size: 18px;
+    opacity: 0.9;
+  }
 
+  .section {
+    margin: 40px auto;
+    padding: 25px;
+    border-radius: 12px;
+    background: white;
+    max-width: 900px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  }
+
+  h2 {
+    border-left: 6px solid #0077b6;
+    padding-left: 12px;
+    color: #023e8a;
+  }
+
+  ul {
+    margin-left: 25px;
+  }
+
+  code {
+    background: #eaf4ff;
+    padding: 3px 6px;
+    border-radius: 6px;
+    font-size: 14px;
+  }
+
+  pre {
+    background: #0a0f1f;
+    padding: 15px;
+    border-radius: 10px;
+    color: #00e1ff;
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+  }
+
+  th, td {
+    border: 1px solid #ddd;
+    padding: 12px;
+  }
+
+  th {
+    background: #0077b6;
+    color: white;
+  }
+
+  .footer {
+    text-align: center;
+    margin: 50px 0;
+    font-size: 14px;
+    opacity: 0.7;
+  }
+
+  .badge {
+    display: inline-block;
+    background: #0077b6;
+    padding: 6px 12px;
+    color: white;
+    border-radius: 12px;
+    margin-right: 10px;
+  }
+</style>
+
+<div class="header">
+  <h1>🏆 Sportics Event Manager</h1>
+  <p class="tagline">A complete sports event management system with Django REST & Next.js</p>
 </div>
 
-<br>
-
----
-
-## <h2 style="color:#4A90E2;">📋 Table of Contents</h2>
-
-- [Features](#-features)
-- [Tech Stack](#-tech-stack)
-- [System Requirements](#-system-requirements)
-- [Installation & Setup](#installation--setup)
-- [Running the Application](#-running-the-application)
-- [Project Structure](#-project-structure)
-- [API Documentation](#-api-documentation)
-- [Default Admin Access](#-default-admin-access)
-- [Troubleshooting](#-troubleshooting)
-
----
-
-## <h2 style="color:#27AE60;">✨ Features</h2>
-
-<div style="padding: 15px; border: 1px solid #e1e1e1; border-radius: 10px; background: #fafafa;">
-
-### 🔐 **Authentication & Users**
-- JWT Authentication  
-- Role-based access control  
-- Token refresh  
-- User profiles  
-
-### 🏆 **LOG Module**
-- House proposals  
-- Draft system  
-- Captain assignment  
-- Match schedules & results  
-- Leaderboards  
-
-### 🎯 **Olympiad Module**
-- Team registrations with fee handling  
-- Multi-sport tournaments  
-- Bracket management  
-
-### 🏟️ **Court Booking**
-- Real-time availability  
-- Price calculations  
-- Admin approval flow  
-
-### 👥 **Team & Sports Management**
-- Create teams  
-- Manage rosters  
-- Configure sports  
-
+<div class="section">
+  <h2>📋 Table of Contents</h2>
+  <ul>
+    <li>Features</li>
+    <li>Tech Stack</li>
+    <li>System Requirements</li>
+    <li>Installation (Backend + Frontend)</li>
+    <li>Running the Application</li>
+    <li>Project Structure</li>
+    <li>API Documentation</li>
+    <li>Troubleshooting</li>
+  </ul>
 </div>
 
----
+<div class="section">
+  <h2>✨ Features</h2>
+  <ul>
+    <li>Role-based user authentication (Admin, Captain, Player)</li>
+    <li>LOG Module: Draft system, player registration, house management</li>
+    <li>Olympiad Module: Team registration, brackets, multi-sport support</li>
+    <li>Court booking with price calculation</li>
+    <li>Match creation, scheduling & results</li>
+    <li>Leaderboard + standings</li>
+  </ul>
+</div>
 
-## <h2 style="color:#E67E22;">🛠 Tech Stack</h2>
+<div class="section">
+  <h2>🛠️ Tech Stack</h2>
+  <span class="badge">Django REST</span>
+  <span class="badge">Next.js 16</span>
+  <span class="badge">Tailwind CSS</span>
+  <span class="badge">JWT Auth</span>
+  <span class="badge">MySQL / SQLite</span>
 
-### **Backend**
-- Django 5.2.7  
-- DRF 3.16.1  
-- JWT (SimpleJWT + Djoser)  
-- SQLite / MySQL  
-- Python 3.11  
+  <h3>Backend</h3>
+  <ul>
+    <li>Django 5.2.7</li>
+    <li>REST Framework 3.16.1</li>
+    <li>JWT Authentication</li>
+  </ul>
 
-### **Frontend**
-- Next.js 16 (App Router)  
-- React 19  
-- TypeScript  
-- Tailwind CSS  
-- Axios  
-- Framer Motion  
+  <h3>Frontend</h3>
+  <ul>
+    <li>Next.js 16 (App Router)</li>
+    <li>React 19 + TypeScript</li>
+    <li>TailwindCSS 4</li>
+  </ul>
+</div>
 
----
+<div class="section">
+  <h2>💻 System Requirements</h2>
+  <ul>
+    <li>Python 3.11+</li>
+    <li>Node.js 18+</li>
+    <li>Git Installed</li>
+  </ul>
+</div>
 
-## <h2 style="color:#9B59B6;">💻 System Requirements</h2>
+<div class="section">
+  <h2>📦 Installation — Backend (Django)</h2>
 
-- Python 3.11+  
-- Node.js 18+  
-- Git  
-- VS Code / PyCharm  
+  <h3>1. Clone the repository</h3>
+  <pre>git clone https://github.com/muhamad-hammad/SporticsEventMAnager.git
+cd SporticsEventMAnager</pre>
 
----
+  <h3>2. Create Virtual Environment</h3>
+  <pre>
+cd Sportics
+python -m venv env
+env\Scripts\activate
+  </pre>
 
-# 🔧 Installation & Setup
+  <h3>3. Install Dependencies</h3>
+  <pre>pip install -r requirements.txt</pre>
 
-## **Backend Setup (Django)**
+  <h3>4. Setup Database</h3>
+  <pre>
+python manage.py makemigrations
+python manage.py migrate
+python manage.py createsuperuser
+  </pre>
+</div>
 
-### 1️⃣ Clone Repo
-```bash
-git clone https://github.com/muhamad-hammad/SporticsEventMAnager.git
-cd SporticsEventMAnager/Sportics
+<div class="section">
+  <h2>🎨 Frontend Installation (Next.js)</h2>
+
+  <h3>1. Navigate to frontend</h3>
+  <pre>cd sportics_backend/frontend</pre>
+
+  <h3>2. Install packages</h3>
+  <pre>npm install</pre>
+
+  <h3>3. Environment</h3>
+  <pre>
+NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
+  </pre>
+</div>
+
+<div class="section">
+  <h2>🚀 Running the Application</h2>
+
+  <h3>Start Backend</h3>
+  <pre>
+cd sportics_backend
+python manage.py runserver
+  </pre>
+
+  <h3>Start Frontend</h3>
+  <pre>
+npm run dev
+  </pre>
+
+  <p>✨ Backend → http://127.0.0.1:8000<br>✨ Frontend → http://localhost:3000</p>
+</div>
+
+<div class="section">
+  <h2>🗂️ Project Structure</h2>
+
+  <pre>
+Sportics/
+├── env/
+├── sportics_backend/
+│   ├── core/
+│   ├── frontend/
+│   ├── sportics_backend/
+│   ├── manage.py
+│   └── db.sqlite3
+└── README.md
+  </pre>
+</div>
+
+<div class="section">
+  <h2>📚 API Documentation</h2>
+
+  <h3>Authentication</h3>
+  <table>
+    <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+    <tr><td>POST</td><td>/auth/users/</td><td>Create User</td></tr>
+    <tr><td>POST</td><td>/auth/jwt/create/</td><td>Login</td></tr>
+    <tr><td>GET</td><td>/auth/users/me/</td><td>Get User</td></tr>
+  </table>
+
+  <h3>Sports</h3>
+  <table>
+    <tr><th>Method</th><th>Endpoint</th><th>Description</th></tr>
+    <tr><td>GET</td><td>/api/sports/</td><td>List Sports</td></tr>
+    <tr><td>POST</td><td>/api/sports/</td><td>Create Sport</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h2>🐛 Troubleshooting</h2>
+
+  <h3>Port Already in Use</h3>
+  <pre>python manage.py runserver 8080</pre>
+
+  <h3>Frontend Issues</h3>
+  <pre>
+npm cache clean --force
+npm install
+  </pre>
+</div>
+
+<div class="section">
+  <h2>👥 Contributors</h2>
+  <p>[Shubair Hyder](https://github.com/SyedMuhammadShubairHyder)</p>
+  <p>[Hammad Bhatti ](https://github.com/muhammad-hammad)</p>
+  <p>[Ayesh](https://github.com/ayeshowcode)</p>
+  
+</div>
+
+<div class="footer">
+  <p>Made with ❤️ for the Database Systems Project</p>
+</div>
